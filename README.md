@@ -230,7 +230,7 @@ filterScanData, err := ib.ReqScannerSubscription(scanSubscription, opts)
 
 ## Documentation
 
-For more information on how to use this package, please refer to the [GoDoc](https://pkg.go.dev/github.com/scmhub/ibsync) documentation and check the [examples](https://github.com/scmhub/ibsync/examples) directory. You can also have a look at the `ib_test.go` file
+For more information on how to use this package, please refer to the [GoDoc](https://pkg.go.dev/github.com/scmhub/ibsync) documentation and check the [examples](https://github.com/scmhub/ibsync/tree/main/examples) directory. You can also have a look at the `ib_test.go` file
 
 ## Acknowledgments
 
