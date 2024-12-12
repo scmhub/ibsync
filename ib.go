@@ -86,19 +86,19 @@ func (ib *IB) Connect(config ...*Config) error {
 	// Start sync
 	if !ib.config.ReadOnly {
 		// Get and sync open orders
-		openOrdersChan, unsubscribe := Subscribe("OpenOrdersEnd")
-		defer unsubscribe()
+		openOrdersChan, _ := Subscribe("OpenOrdersEnd")
+		// defer unsubscribe()
 		ib.ReqOpenOrders()
 		<-openOrdersChan
 		// Get and sync completed orders
-		completedOrdersChan, unsubscribe := Subscribe("CompletedOrdersEnd")
-		defer unsubscribe()
+		completedOrdersChan, _ := Subscribe("CompletedOrdersEnd")
+		// defer unsubscribe()
 		ib.ReqCompletedOrders(false)
 		<-completedOrdersChan
 	}
 	if ib.config.Account != "" {
-		accountUpdatesChan, unsubscribe := Subscribe("AccountDownloadEnd")
-		defer unsubscribe()
+		accountUpdatesChan, _ := Subscribe("AccountDownloadEnd")
+		// defer unsubscribe()
 		ib.ReqAccountUpdates(true, ib.config.Account)
 		<-accountUpdatesChan
 	}

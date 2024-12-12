@@ -12,12 +12,10 @@
 ## Getting Started
 
 ### Prerequisites
-
 - **Go** version 1.23 or higher (recommended)
 - An **Interactive Brokers** account with TWS or IB Gateway installed and running
 
 ### Installation
-
 Install the package via `go get`:
 
 ```bash
@@ -25,7 +23,6 @@ go get -u github.com/scmhub/ibsync
 ```
 
 ## Quick start
-
 Here’s a basic example to connect and get the managed accounts list:
 
 ```go
@@ -229,11 +226,9 @@ filterScanData, err := ib.ReqScannerSubscription(scanSubscription, opts)
 ```
 
 ## Documentation
-
 For more information on how to use this package, please refer to the [GoDoc](https://pkg.go.dev/github.com/scmhub/ibsync) documentation and check the [examples](https://github.com/scmhub/ibsync/tree/main/examples) directory. You can also have a look at the `ib_test.go` file
 
 ## Acknowledgments
-
 - [ibapi](https://github.com/scmhub/ibapi) for core API functionality.
 - [ib_insync](https://github.com/erdewit/ib_insync) for API inspiration. (ib_insync is now [ib_async](https://github.com/ib-api-reloaded/ib_async))
 
@@ -248,5 +243,7 @@ For more information on how to use this package, please refer to the [GoDoc](htt
 >The authors of this package make **no guarantees** regarding the software's reliability, accuracy, or suitability for any particular purpose, including trading or financial decisions. **No liability** will be accepted for any financial losses, damages, or misinterpretations arising from the use of this software.
 
 ## License
-
 Distributed under the MIT License. See [LICENSE](./LICENSE) for more information.
+
+## Author
+**Philippe Chavanne** - [contact](https://scm.cx/contact)
