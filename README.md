@@ -24,7 +24,6 @@ go get -u github.com/scmhub/ibsync
 
 ## Quick start
 Here’s a basic example to connect and get the managed accounts list:
-
 ```go
 package main
 
