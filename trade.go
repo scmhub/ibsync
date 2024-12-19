@@ -70,10 +70,10 @@ func (os OrderStatus) IsDone() bool {
 // Fill represents a single execution fill of an order, including contract details,
 // execution information, and commission data.
 type Fill struct {
-	Contract         *Contract        // Contract details for the filled order
-	Execution        *Execution       // Execution details of the fill
-	CommissionReport CommissionReport // Commission information for the fill
-	Time             time.Time        // Timestamp of the fill
+	Contract                *Contract               // Contract details for the filled order
+	Execution               *Execution              // Execution details of the fill
+	CommissionAndFeesReport CommissionAndFeesReport // Commission and fees information for the fill
+	Time                    time.Time               // Timestamp of the fill
 }
 
 // PassesExecutionFilter checks if the fill matches the specified execution filter criteria.

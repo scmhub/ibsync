@@ -267,10 +267,10 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 		return
 	}
 	fill := &Fill{
-		Contract:         contract,
-		Execution:        execution,
-		CommissionReport: NewCommissionReport(),
-		Time:             executionTime,
+		Contract:                contract,
+		Execution:               execution,
+		CommissionAndFeesReport: NewCommissionAndFeesReport(),
+		Time:                    executionTime,
 	}
 	_, ok = state.fills[execution.ExecID]
 	if !ok {
@@ -434,24 +434,24 @@ func (w *WrapperSync) MarketDataType(reqID int64, marketDataType int64) {
 	}
 }
 
-func (w *WrapperSync) CommissionReport(commissionReport CommissionReport) {
-	if commissionReport.Yield == UNSET_FLOAT {
-		commissionReport.Yield = 0.0
+func (w *WrapperSync) CommissionAndFeesReport(commissionAndFeesReport CommissionAndFeesReport) {
+	if commissionAndFeesReport.Yield == UNSET_FLOAT {
+		commissionAndFeesReport.Yield = 0.0
 	}
-	if commissionReport.RealizedPNL == UNSET_FLOAT {
-		commissionReport.RealizedPNL = 0.0
+	if commissionAndFeesReport.RealizedPNL == UNSET_FLOAT {
+		commissionAndFeesReport.RealizedPNL = 0.0
 	}
-	log.Debug().Stringer("commissionReport", commissionReport).Msg("<CommissionReport>")
+	log.Debug().Stringer("commissionAndFeesReport", commissionAndFeesReport).Msg("<CommissionAndFeesReport>")
 
 	state.mu.Lock()
-	fill, ok := state.fills[commissionReport.ExecID]
+	fill, ok := state.fills[commissionAndFeesReport.ExecID]
 	if !ok {
-		log.Error().Err(errUnknowExecution).Stringer("commissionReport", commissionReport).Msg("<CommissionReport>")
+		log.Error().Err(errUnknowExecution).Stringer("commissionReportAndFees", commissionAndFeesReport).Msg("<CommissionReportAndFeesœ		>")
 		return
 	}
 	state.mu.Unlock()
 
-	fill.CommissionReport = commissionReport
+	fill.CommissionAndFeesReport = commissionAndFeesReport
 
 }
 

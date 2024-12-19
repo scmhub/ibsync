@@ -27,7 +27,7 @@ func init() {
 	gob.Register(ibapi.Bar{})
 	gob.Register(ibapi.CodeMsgPair{})
 	gob.Register(ibapi.ComboLeg{})
-	gob.Register(ibapi.CommissionReport{})
+	gob.Register(ibapi.CommissionAndFeesReport{})
 	gob.Register(ibapi.Contract{})
 	gob.Register(ibapi.ContractDetails{})
 	gob.Register(ibapi.ContractDescription{})

@@ -33,7 +33,7 @@ var (
 type (
 	Bar                             = ibapi.Bar
 	RealTimeBar                     = ibapi.RealTimeBar
-	CommissionReport                = ibapi.CommissionReport
+	CommissionAndFeesReport         = ibapi.CommissionAndFeesReport
 	ComboLeg                        = ibapi.ComboLeg
 	Contract                        = ibapi.Contract
 	ContractDescription             = ibapi.ContractDescription
@@ -74,7 +74,7 @@ type (
 var (
 	NewBar                     = ibapi.NewBar
 	NewRealTimeBar             = ibapi.NewRealTimeBar
-	NewCommissionReport        = ibapi.NewCommissionReport
+	NewCommissionAndFeesReport = ibapi.NewCommissionAndFeesReport
 	NewComboLeg                = ibapi.NewComboLeg
 	NewContract                = ibapi.NewContract
 	NewContractDescription     = ibapi.NewContractDescription
