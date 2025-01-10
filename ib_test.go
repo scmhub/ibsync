@@ -113,13 +113,25 @@ func TestConnection(t *testing.T) {
 	// CurrentTime
 	currentTime, err := ib.ReqCurrentTime()
 	if err != nil {
-		t.Error("ReqCurrentTime")
+		t.Errorf("ReqCurrentTime: %v", err)
 		return
 	}
 	lag := time.Since(currentTime)
 	t.Logf("CurrentTime: %v, lag: %v.\n", currentTime, lag)
 	if lag >= 3*time.Second {
 		t.Error("CurrentTime lag is too high", lag)
+	}
+
+	// CurrentTimeInMillis
+	currentTimeInMillis, err := ib.ReqCurrentTimeInMillis()
+	if err != nil {
+		t.Errorf("ReqCurrentTimeInMillis: %v", err)
+		return
+	}
+	lag = time.Since(time.UnixMilli(currentTimeInMillis))
+	t.Logf("CurrentTime: %v, lag: %v.\n", currentTime, lag)
+	if lag >= 3*time.Second {
+		t.Error("CurrentTimeInMillis lag is too high", lag)
 	}
 
 	// Server version

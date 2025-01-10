@@ -826,3 +826,8 @@ func (w *WrapperSync) UserInfo(reqID int64, whiteBrandingId string) {
 	log.Debug().Int64("reqID", reqID).Str("whiteBrandingId", whiteBrandingId).Msg("<UserInfo>")
 	Publish(reqID, whiteBrandingId)
 }
+
+func (w WrapperSync) CurrentTimeInMillis(timeInMillis int64) {
+	log.Debug().Int64("TimeInMillis", timeInMillis).Msg("<CurrentTimeInMillis>")
+	Publish("CurrentTimeInMillis", Encode(timeInMillis))
+}

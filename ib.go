@@ -545,6 +545,28 @@ func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
 	}
 }
 
+// ReqCurrentTime asks the current system time on the server side.
+func (ib *IB) ReqCurrentTimeInMillis() (int64, error) {
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	defer cancel()
+
+	ch, unsubscribe := Subscribe("CurrentTimeInMillis")
+	defer unsubscribe()
+
+	ib.eClient.ReqCurrentTimeInMillis()
+
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	case msg := <-ch:
+		var ctim int64
+		if err := Decode(&ctim, msg); err != nil {
+			return 0, err
+		}
+		return ctim, nil
+	}
+}
+
 // ServerVersion returns the version of the TWS instance to which the API application is connected.
 func (ib *IB) ServerVersion() int {
 	return ib.eClient.ServerVersion()
