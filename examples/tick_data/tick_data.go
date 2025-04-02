@@ -10,9 +10,9 @@ import (
 // Connection constants for the Interactive Brokers API.
 const (
 	// host specifies the IB API server address
-	host = "10.74.0.9"
+	host = "localhost"
 	// port specifies the IB API server port
-	port = 4002
+	port = 7497
 	// clientID is the unique identifier for this client connection
 	clientID = 5
 )

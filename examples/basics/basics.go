@@ -20,19 +20,19 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/scmhub/ibsync"
 )
 
 // Connection constants for the Interactive Brokers API.
 const (
 	// host specifies the IB API server address
-	host = "10.74.0.9"
+	host = "localhost"
 	// port specifies the IB API server port
-	port = 4002
+	port = 7497
 	// clientID is the unique identifier for this client connection
 	clientID = 5
 )
@@ -41,7 +41,7 @@ func main() {
 	// We get ibsync logger
 	log := ibsync.Logger()
 	// Set log level to Debug
-	// ibsync.SetLogLevel(int(zerolog.DebugLevel))
+	ibsync.SetLogLevel(int(zerolog.TraceLevel))
 	// Set logger for pretty logs to console
 	ibsync.SetConsoleWriter()
 
@@ -132,51 +132,51 @@ func main() {
 		return
 	}
 
-	// Fills
-	fills := ib.Fills()
-	fmt.Println("fills", fills)
+	// // Fills
+	// fills := ib.Fills()
+	// fmt.Println("fills", fills)
 
-	// Executions
-	executions := ib.Executions()
-	fmt.Println("executions", executions)
+	// // Executions
+	// executions := ib.Executions()
+	// fmt.Println("executions", executions)
 
-	// User info
-	whiteBrandingId, _ := ib.ReqUserInfo()
-	fmt.Println("whiteBrandingId", whiteBrandingId)
+	// // User info
+	// whiteBrandingId, _ := ib.ReqUserInfo()
+	// fmt.Println("whiteBrandingId", whiteBrandingId)
 
-	// News bulletins Channel
-	nbChan := ib.NewsBulletinsChan()
-	ctx, cancel := context.WithCancel(ib.Context())
-	defer cancel()
-	go func() {
-		var i int
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case bulletin, ok := <-nbChan:
-				if !ok {
-					return
-				}
-				fmt.Printf("News bulletin from channel %v: %v\n", i, bulletin)
-				i++
-			}
-		}
-	}()
+	// // News bulletins Channel
+	// nbChan := ib.NewsBulletinsChan()
+	// ctx, cancel := context.WithCancel(ib.Context())
+	// defer cancel()
+	// go func() {
+	// 	var i int
+	// 	for {
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			return
+	// 		case bulletin, ok := <-nbChan:
+	// 			if !ok {
+	// 				return
+	// 			}
+	// 			fmt.Printf("News bulletin from channel %v: %v\n", i, bulletin)
+	// 			i++
+	// 		}
+	// 	}
+	// }()
 
-	// Request news bulletins
-	ib.ReqNewsBulletins(true)
+	// // Request news bulletins
+	// ib.ReqNewsBulletins(true)
 
-	// Wait for bulletins
-	time.Sleep(10 * time.Second)
+	// // Wait for bulletins
+	// time.Sleep(10 * time.Second)
 
-	// Recorded bulletins
-	bulletins := ib.NewsBulletins()
+	// // Recorded bulletins
+	// bulletins := ib.NewsBulletins()
 
-	for i, bulletin := range bulletins {
-		fmt.Printf("News bulletin %v: %v\n", i, bulletin)
-	}
-	ib.CancelNewsBulletins()
+	// for i, bulletin := range bulletins {
+	// 	fmt.Printf("News bulletin %v: %v\n", i, bulletin)
+	// }
+	// ib.CancelNewsBulletins()
 
 	time.Sleep(1 * time.Second)
 	log.Info().Msg("Good Bye!!!")

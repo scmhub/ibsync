@@ -13,9 +13,9 @@ import (
 // Connection constants for the Interactive Brokers API.
 const (
 	// host specifies the IB API server address
-	host = "10.74.0.9"
+	host = "localhost"
 	// port specifies the IB API server port
-	port = 4002
+	port = 7497
 	// clientID is the unique identifier for this client connection
 	clientID = 5
 )
@@ -67,7 +67,7 @@ func printTrades(header string, count int, printPrevious bool, ib *ibsync.IB) {
 func main() {
 	// We set logger for pretty logs to console
 	log := ibsync.Logger()
-	// ibsync.SetLogLevel(0)
+	ibsync.SetLogLevel(0)
 	ibsync.SetConsoleWriter()
 
 	// New IB client & Connect
@@ -199,7 +199,9 @@ func main() {
 	}
 
 	// Executions & Fills after filtered request
-	execs, err = ib.ReqExecutions(ibsync.ExecutionFilter{Side: "BUY"})
+	ef := ibsync.NewExecutionFilter()
+	ef.Side = "BUY"
+	execs, err = ib.ReqExecutions(ef)
 	if err != nil {
 		log.Error().Err(err).Msg("Request Executions")
 		return
@@ -218,7 +220,7 @@ func main() {
 	}
 
 	// Executions & Fills after no filter request
-	execs, err = ib.ReqExecutions(ibsync.ExecutionFilter{})
+	execs, err = ib.ReqExecutions(ibsync.NewExecutionFilter())
 	if err != nil {
 		log.Error().Err(err).Msg("Request Executions")
 		return

@@ -65,13 +65,13 @@ func TestFill_Matches(t *testing.T) {
 	tests := []struct {
 		name   string
 		fill   *Fill
-		filter ExecutionFilter
+		filter *ExecutionFilter
 		want   bool
 	}{
 		{
 			name:   "nil fill never matches",
 			fill:   nil,
-			filter: ExecutionFilter{},
+			filter: &ExecutionFilter{},
 			want:   false,
 		},
 		{
@@ -86,7 +86,7 @@ func TestFill_Matches(t *testing.T) {
 				},
 				Time: testTime,
 			},
-			filter: ExecutionFilter{},
+			filter: NewExecutionFilter(),
 			want:   true,
 		},
 		{
@@ -101,7 +101,7 @@ func TestFill_Matches(t *testing.T) {
 				},
 				Time: testTime,
 			},
-			filter: ExecutionFilter{
+			filter: &ExecutionFilter{
 				AcctCode: "123",
 				ClientID: 456,
 				Exchange: "NASDAQ",
@@ -118,8 +118,12 @@ func TestFill_Matches(t *testing.T) {
 				Contract:  &Contract{Symbol: "AAPL", SecType: "STK"},
 				Execution: &Execution{AcctNumber: "123"},
 			},
-			filter: ExecutionFilter{AcctCode: "456"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.AcctCode = "456"
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching client ID",
@@ -130,8 +134,12 @@ func TestFill_Matches(t *testing.T) {
 					ClientID:   456,
 				},
 			},
-			filter: ExecutionFilter{ClientID: 789},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.ClientID = 789
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching exchange",
@@ -142,8 +150,12 @@ func TestFill_Matches(t *testing.T) {
 					Exchange:   "NASDAQ",
 				},
 			},
-			filter: ExecutionFilter{Exchange: "NYSE"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.Exchange = "NYSE"
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching security type",
@@ -151,8 +163,12 @@ func TestFill_Matches(t *testing.T) {
 				Contract:  &Contract{Symbol: "AAPL", SecType: "STK"},
 				Execution: &Execution{AcctNumber: "123"},
 			},
-			filter: ExecutionFilter{SecType: "OPT"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.SecType = "OPT"
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching side",
@@ -163,8 +179,12 @@ func TestFill_Matches(t *testing.T) {
 					Side:       "BUY",
 				},
 			},
-			filter: ExecutionFilter{Side: "SELL"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.Side = "SELL"
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching symbol",
@@ -172,8 +192,12 @@ func TestFill_Matches(t *testing.T) {
 				Contract:  &Contract{Symbol: "AAPL", SecType: "STK"},
 				Execution: &Execution{AcctNumber: "123"},
 			},
-			filter: ExecutionFilter{Symbol: "MSFT"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.Symbol = "MSFT"
+				return f
+			}(),
+			want: false,
 		},
 		{
 			name: "non-matching time",
@@ -182,8 +206,12 @@ func TestFill_Matches(t *testing.T) {
 				Execution: &Execution{AcctNumber: "123"},
 				Time:      testTime,
 			},
-			filter: ExecutionFilter{Time: "20240102-16:04:05"},
-			want:   false,
+			filter: func() *ExecutionFilter {
+				f := NewExecutionFilter()
+				f.Time = "20240102-16:04:05"
+				return f
+			}(),
+			want: false,
 		},
 	}
 

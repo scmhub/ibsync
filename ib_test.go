@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	testHost           = "10.74.0.9"
-	testPort           = 4002
+	testHost           = "localhost"
+	testPort           = 7497
 	testClientID       = 1973
 	testTimeOut        = 10 * time.Second
 	account            = "DU5352527"
@@ -111,6 +111,7 @@ func TestConnection(t *testing.T) {
 	}
 
 	// CurrentTime
+	time.Sleep(1 * time.Second)
 	currentTime, err := ib.ReqCurrentTime()
 	if err != nil {
 		t.Errorf("ReqCurrentTime: %v", err)
@@ -123,13 +124,14 @@ func TestConnection(t *testing.T) {
 	}
 
 	// CurrentTimeInMillis
+	time.Sleep(1 * time.Second)
 	currentTimeInMillis, err := ib.ReqCurrentTimeInMillis()
 	if err != nil {
 		t.Errorf("ReqCurrentTimeInMillis: %v", err)
 		return
 	}
 	lag = time.Since(time.UnixMilli(currentTimeInMillis))
-	t.Logf("CurrentTime: %v, lag: %v.\n", currentTime, lag)
+	t.Logf("CurrentTimeMillis: %v, lag: %v.\n", currentTimeInMillis, lag)
 	if lag >= 3*time.Second {
 		t.Error("CurrentTimeInMillis lag is too high", lag)
 	}

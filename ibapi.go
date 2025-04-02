@@ -82,6 +82,7 @@ var (
 	NewDeltaNeutralContract    = ibapi.NewDeltaNeutralContract
 	NewDepthMktDataDescription = ibapi.NewDepthMktDataDescription
 	NewExecution               = ibapi.NewExecution
+	NewExecutionFilter         = ibapi.NewExecutionFilter
 	NewFamilyCode              = ibapi.NewFamilyCode
 	NewHistogramData           = ibapi.NewHistogramData
 	NewHistoricalSession       = ibapi.NewHistoricalSession

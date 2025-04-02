@@ -526,6 +526,7 @@ func (ib *IB) NewsTick() []NewsTick {
 }
 
 // ReqCurrentTime asks the current system time on the server side.
+// A second call within a secund will not be answered.
 func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
@@ -546,6 +547,7 @@ func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
 }
 
 // ReqCurrentTime asks the current system time on the server side.
+// A second call within a secund will not be answered.
 func (ib *IB) ReqCurrentTimeInMillis() (int64, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
@@ -1080,7 +1082,7 @@ func (ib *IB) CancelAccountUpdatesMulti(reqID int64) {
 
 // Executions returns a slice of all the executions from this session.
 // To get executions from previous sessions of the day you must call reqExecutions.
-func (ib *IB) Executions(execFilter ...ExecutionFilter) []Execution {
+func (ib *IB) Executions(execFilter ...*ExecutionFilter) []Execution {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	var es []Execution
@@ -1100,7 +1102,7 @@ func (ib *IB) Executions(execFilter ...ExecutionFilter) []Execution {
 // To view executions beyond the past 24 hours, open the Trade Log in TWS and, while the Trade Log is displayed, request the executions again from the API.
 // execFilter contains attributes that describe the filter criteria used to determine which execution reports are returned
 // NOTE: Time format must be 'yyyymmdd-hh:mm:ss' Eg: '20030702-14:55'
-func (ib *IB) ReqExecutions(execFilter ...ExecutionFilter) ([]Execution, error) {
+func (ib *IB) ReqExecutions(execFilter ...*ExecutionFilter) ([]Execution, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
@@ -1109,7 +1111,7 @@ func (ib *IB) ReqExecutions(execFilter ...ExecutionFilter) ([]Execution, error) 
 	ch, unsubscribe := Subscribe(reqID, 100)
 	defer unsubscribe()
 
-	var ef ExecutionFilter
+	ef := ibapi.NewExecutionFilter()
 	if len(execFilter) > 0 {
 		ef = execFilter[0]
 	}
@@ -1136,7 +1138,7 @@ func (ib *IB) ReqExecutions(execFilter ...ExecutionFilter) ([]Execution, error) 
 
 // Fills returns a slice of all the fills from this session.
 // To get fills from previous sessions of the day you must call reqFills.
-func (ib *IB) Fills(execFilter ...ExecutionFilter) []Fill {
+func (ib *IB) Fills(execFilter ...*ExecutionFilter) []Fill {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	var fs []Fill
@@ -1152,7 +1154,7 @@ func (ib *IB) Fills(execFilter ...ExecutionFilter) []Fill {
 	return fs
 }
 
-func (ib *IB) ReqFills(execFilter ...ExecutionFilter) ([]Fill, error) {
+func (ib *IB) ReqFills(execFilter ...*ExecutionFilter) ([]Fill, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
@@ -1161,7 +1163,7 @@ func (ib *IB) ReqFills(execFilter ...ExecutionFilter) ([]Fill, error) {
 	ch, unsubscribe := Subscribe(reqID, 100)
 	defer unsubscribe()
 
-	var ef ExecutionFilter
+	ef := ibapi.NewExecutionFilter()
 	if len(execFilter) > 0 {
 		ef = execFilter[0]
 	}

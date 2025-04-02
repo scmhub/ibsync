@@ -77,7 +77,7 @@ type Fill struct {
 }
 
 // PassesExecutionFilter checks if the fill matches the specified execution filter criteria.
-func (f *Fill) Matches(filter ExecutionFilter) bool {
+func (f *Fill) Matches(filter *ExecutionFilter) bool {
 	if f == nil {
 		return false
 	}
