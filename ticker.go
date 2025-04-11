@@ -44,6 +44,7 @@ type Ticker struct {
 	last                float64
 	lastSize            Decimal
 	lastExchange        string
+	lastTimestamp       string
 	prevBid             float64
 	prevBidSize         Decimal
 	prevAsk             float64
@@ -826,6 +827,8 @@ func (t *Ticker) SetTickString(ts TickString) {
 		t.askExchange = ts.Value
 	case LAST_EXCH:
 		t.lastExchange = ts.Value
+	case LAST_TIMESTAMP, DELAYED_LAST_TIMESTAMP:
+		t.lastTimestamp = ts.Value
 	case FUNDAMENTAL_RATIOS:
 		d := make(FundamentalRatios)
 		for _, t := range strings.Split(ts.Value, ";") {
@@ -937,8 +940,6 @@ func (t *Ticker) SetTickString(ts TickString) {
 			ds.NextAmount = f
 		}
 		t.dividends = ds
-	case DELAYED_LAST_TIMESTAMP:
-
 	default:
 		log.Warn().Err(errUnknownTickType).Int64("TickType", ts.TickType).Msg("SetTickString")
 	}
@@ -1007,6 +1008,7 @@ func (t *Ticker) String() string {
 		Last                float64
 		LastSize            Decimal
 		LastExchange        string
+		LastTimestamp       string
 		PrevBid             float64
 		PrevBidSize         Decimal
 		PrevAsk             float64
@@ -1079,6 +1081,7 @@ func (t *Ticker) String() string {
 		Last:                t.last,
 		LastSize:            t.lastSize,
 		LastExchange:        t.lastExchange,
+		LastTimestamp:       t.lastTimestamp,
 		PrevBid:             t.prevBid,
 		PrevBidSize:         t.prevBidSize,
 		PrevAsk:             t.prevAsk,
