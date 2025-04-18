@@ -2,8 +2,11 @@ package ibsync
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 )
+
+const defaultBufferSize = 5
 
 var pubSub *PubSub
 
@@ -58,7 +61,7 @@ func (ps *PubSub) Subscribe(topic any, size ...int) <-chan string {
 
 	t := fmt.Sprint(topic)
 
-	buffSize := 2 // Default buffer size
+	buffSize := defaultBufferSize
 	if len(size) > 0 {
 		buffSize = size[0]
 	}
@@ -84,7 +87,7 @@ func (ps *PubSub) Unsubscribe(topic any, subscriberChan <-chan string) {
 
 	for i, ch := range subscribers {
 		if ch == subscriberChan {
-			ps.topics[t] = append(subscribers[:i], subscribers[i+1:]...)
+			ps.topics[t] = slices.Delete(subscribers, i, i+1)
 			close(ch)
 			if len(ps.topics[t]) == 0 {
 				delete(ps.topics, t)
@@ -114,19 +117,14 @@ func (ps *PubSub) UnsubscribeAll(topic any) {
 // Publish sends a message to all subscribers of a topic.
 func (ps *PubSub) Publish(topic any, msg string) {
 	ps.mu.RLock()
+	defer ps.mu.RUnlock()
 
 	t := fmt.Sprint(topic)
 
 	subscribers, exists := ps.topics[t]
 	if !exists {
-		ps.mu.RUnlock()
 		return
 	}
-
-	// Create a copy of subscribers to avoid holding the lock while sending
-	subs := make([]chan string, len(subscribers))
-	copy(subs, subscribers)
-	ps.mu.RUnlock()
 
 	for _, ch := range subscribers {
 		ch <- msg // must be blocking or "end" msgs can get through before msgs and will close the channel too early

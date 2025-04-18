@@ -764,6 +764,7 @@ func (ib *IB) ReqMarketRule(marketRuleID int64) ([]PriceIncrement, error) {
 // tickType is one of "Last", "AllLast", "BidAsk" or "MidPoint".
 // numberOfTicks is the number of ticks or 0 for unlimited.
 // ignoreSize ignores bid/ask ticks that only update the size.
+// No more than one request can be made for the same instrument within 15 seconds.
 func (ib *IB) ReqTickByTickData(contract *Contract, tickType string, numberOfTicks int64, ignoreSize bool) *Ticker {
 	reqID := ib.NextID()
 
@@ -794,6 +795,8 @@ func (ib *IB) CancelTickByTickData(contract *Contract, tickType string) error {
 }
 
 // MidPoint requests and returns the last Mid Point
+//
+// No more than one request can be made for the same instrument within 15 seconds.
 func (ib *IB) MidPoint(contract *Contract) (TickByTickMidPoint, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
