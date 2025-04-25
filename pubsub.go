@@ -8,36 +8,8 @@ import (
 
 const defaultBufferSize = 5
 
-var pubSub *PubSub
-
-// init initializes the global PubSub instance when the package is imported.
-func init() {
-	pubSub = NewPubSub()
-}
-
 // UnsubscribeFunc is a function type that can be used to unsubscribe from a topic.
 type UnsubscribeFunc func()
-
-// Subscribe creates a new subscriber channel for a given topic on the global PubSub instance.
-func Subscribe(topic any, size ...int) (<-chan string, UnsubscribeFunc) {
-	ch := pubSub.Subscribe(topic, size...)
-	return ch, func() { pubSub.Unsubscribe(topic, ch) }
-}
-
-// Unsubscribe removes a specific subscriber channel from a topic on the global PubSub instance.
-func Unsubscribe(topic any, subscriber <-chan string) {
-	pubSub.Unsubscribe(topic, subscriber)
-}
-
-// UnsubscribeAll removes all subscribers from a specific topic on the global PubSub instance.
-func UnsubscribeAll(topic any) {
-	pubSub.UnsubscribeAll(topic)
-}
-
-// Publish sends a message to all subscribers of a given topic on the global PubSub instance.
-func Publish(topic any, msg string) {
-	pubSub.Publish(topic, msg)
-}
 
 // PubSub is a thread-safe publish-subscribe implementation.
 // It manages topic subscriptions and message distribution.
@@ -55,7 +27,7 @@ func NewPubSub() *PubSub {
 
 // Subscribe creates a new subscriber for a topic and returns a channel to receive messages.
 // It supports optional buffer size specification.
-func (ps *PubSub) Subscribe(topic any, size ...int) <-chan string {
+func (ps *PubSub) Subscribe(topic any, size ...int) (<-chan string, UnsubscribeFunc) {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
@@ -69,7 +41,7 @@ func (ps *PubSub) Subscribe(topic any, size ...int) <-chan string {
 
 	ps.topics[t] = append(ps.topics[t], ch)
 
-	return ch
+	return ch, func() { ps.Unsubscribe(topic, ch) }
 }
 
 // Unsubscribe removes a specific subscriber channel from a topic.

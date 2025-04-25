@@ -8,15 +8,16 @@ import (
 
 // Test basic Publish and Subscribe
 func TestPublishSubscribe(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "test_topic"
 	msg := "test message"
 
 	// Subscribe to a topic
-	ch, unsubscribe := Subscribe(topic)
+	ch, unsubscribe := pubSub.Subscribe(topic)
 	defer unsubscribe()
 
 	// Publish a message to the topic
-	Publish(topic, msg)
+	pubSub.Publish(topic, msg)
 
 	// Verify that the subscriber receives the message
 	select {
@@ -31,17 +32,18 @@ func TestPublishSubscribe(t *testing.T) {
 
 // Test multiple subscribers
 func TestMultipleSubscribers(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "multi_subscribers_topic"
 	msg := "hello, subscribers!"
 
 	// Subscribe multiple channels to the same topic
-	ch1, unsubscribeCh1 := Subscribe(topic)
+	ch1, unsubscribeCh1 := pubSub.Subscribe(topic)
 	defer unsubscribeCh1()
-	ch2, unsubscribeCh2 := Subscribe(topic)
+	ch2, unsubscribeCh2 := pubSub.Subscribe(topic)
 	defer unsubscribeCh2()
 
 	// Publish a message to the topic
-	Publish(topic, msg)
+	pubSub.Publish(topic, msg)
 
 	// Verify that both subscribers receive the message
 	for _, ch := range []<-chan string{ch1, ch2} {
@@ -60,9 +62,10 @@ func TestMultipleSubscribers(t *testing.T) {
 
 // Test Unsubscribe
 func TestUnsubscribe(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "unsubscribe_test"
-	ch, _ := Subscribe(topic)
-	Unsubscribe(topic, ch)
+	ch, _ := pubSub.Subscribe(topic)
+	pubSub.Unsubscribe(topic, ch)
 
 	select {
 	case _, open := <-ch:
@@ -76,11 +79,12 @@ func TestUnsubscribe(t *testing.T) {
 
 // Test UnsubscribeAll
 func TestUnsubscribeAll(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "unsubscribe_all_test"
-	ch1, _ := Subscribe(topic)
-	ch2, _ := Subscribe(topic)
+	ch1, _ := pubSub.Subscribe(topic)
+	ch2, _ := pubSub.Subscribe(topic)
 
-	UnsubscribeAll(topic)
+	pubSub.UnsubscribeAll(topic)
 
 	// Verify that both channels are closed
 	for _, ch := range []<-chan string{ch1, ch2} {
@@ -97,23 +101,25 @@ func TestUnsubscribeAll(t *testing.T) {
 
 // Test Publish without subscribers
 func TestPublishWithoutSubscribers(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "no_subscriber_topic"
-	Publish(topic, "no subscribers") // No channels subscribed, should proceed without errors
+	pubSub.Publish(topic, "no subscribers") // No channels subscribed, should proceed without errors
 }
 
 // Test Publish while unsubscribing in parallel
 func TestPublishUnsubscribeParallel(t *testing.T) {
+	pubSub := NewPubSub()
 	topic := "parallel_publish_unsubscribe"
 	msg := "parallel message"
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	_, unsubscribe := Subscribe(topic)
+	_, unsubscribe := pubSub.Subscribe(topic)
 
 	go func() {
 		defer wg.Done()
-		Publish(topic, msg)
+		pubSub.Publish(topic, msg)
 	}()
 
 	go func() {
@@ -125,6 +131,7 @@ func TestPublishUnsubscribeParallel(t *testing.T) {
 }
 
 func BenchmarkPubSub(b *testing.B) {
+	pubSub := NewPubSub()
 	reqID := 1
 	eurusd := NewForex("EUR", "IDEALPRO", "USD")
 	contractDetails := NewContractDetails()
@@ -133,8 +140,8 @@ func BenchmarkPubSub(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		ch, cancel := Subscribe(reqID)
-		Publish(reqID, Encode(contractDetails))
+		ch, cancel := pubSub.Subscribe(reqID)
+		pubSub.Publish(reqID, Encode(contractDetails))
 		msg := <-ch
 		var cd ContractDetails
 		if err := Decode(&cd, msg); err != nil {
@@ -145,6 +152,7 @@ func BenchmarkPubSub(b *testing.B) {
 }
 
 func BenchmarkPubSubBuffered(b *testing.B) {
+	pubSub := NewPubSub()
 	reqID := 1
 	eurusd := NewForex("EUR", "IDEALPRO", "USD")
 	contractDetails := NewContractDetails()
@@ -153,8 +161,8 @@ func BenchmarkPubSubBuffered(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		ch, cancel := Subscribe(reqID, 100)
-		Publish(reqID, Encode(contractDetails))
+		ch, cancel := pubSub.Subscribe(reqID, 100)
+		pubSub.Publish(reqID, Encode(contractDetails))
 		msg := <-ch
 		var cd ContractDetails
 		if err := Decode(&cd, msg); err != nil {

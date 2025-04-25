@@ -11,7 +11,6 @@ import (
 var (
 	ErrNotPaperTrading     = errors.New("this account is not a paper trading account")
 	ErrNotFinancialAdvisor = errors.New("this account is not a financial advisor account")
-	ErrNoConfigProvided    = errors.New("no config provided")
 	ErrAmbiguousContract   = errors.New("ambiguous contract")
 	ErrNoDataSubscription  = errors.New("no data subscription")
 )

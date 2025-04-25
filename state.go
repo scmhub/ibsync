@@ -5,13 +5,6 @@ import (
 	"time"
 )
 
-var state *ibState
-
-// init initializes the global state instance when the package is imported.
-func init() {
-	state = NewState()
-}
-
 // ibState holds the data to keep in sync with IB server.
 // Note: It is the responsibility of the user to lock and unlock this state!
 type ibState struct {

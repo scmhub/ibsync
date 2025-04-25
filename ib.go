@@ -22,18 +22,31 @@ type CancelFunc func()
 // This state is automatically kept in sync with the TWS/IBG application.
 // IB has most request methods of EClient, with the same names and parameters (except for the reqId parameter which is not needed anymore).
 type IB struct {
+	state   *ibState
+	pubSub  *PubSub
 	eClient *ibapi.EClient
 	wrapper *WrapperSync
 	config  *Config
 }
 
 func NewIB(config ...*Config) *IB {
-	wrapper := NewWrapperSync()
-	c := ibapi.NewEClient(wrapper)
-	ib := &IB{eClient: c, wrapper: wrapper}
+	state := NewState()
+	pubSub := NewPubSub()
+	wrapper := NewWrapperSync(state, pubSub)
+	client := ibapi.NewEClient(wrapper)
+
+	ib := &IB{
+		state:   state,
+		pubSub:  pubSub,
+		eClient: client,
+		wrapper: wrapper,
+		config:  NewConfig(),
+	}
+
 	if len(config) > 0 {
 		ib.config = config[0]
 	}
+
 	return ib
 }
 
@@ -62,14 +75,14 @@ func (ib *IB) Connect(config ...*Config) error {
 	if len(config) > 0 {
 		ib.config = config[0] // override config
 	}
-	if ib.config == nil {
-		return ErrNoConfigProvided
-	}
+
 	err := ib.eClient.Connect(ib.config.Host, ib.config.Port, ib.config.ClientID)
 	if err != nil {
 		return err
 	}
-	time.Sleep(1 * time.Second)
+
+	time.Sleep(500 * time.Millisecond)
+
 	// bind manual orders
 	if ib.config.ClientID == 0 {
 		ib.ReqAutoOpenOrders(true)
@@ -86,19 +99,19 @@ func (ib *IB) Connect(config ...*Config) error {
 	// Start sync
 	if !ib.config.ReadOnly {
 		// Get and sync open orders
-		openOrdersChan, _ := Subscribe("OpenOrdersEnd")
-		// defer unsubscribe()
+		openOrdersChan, _ := ib.pubSub.Subscribe("OpenOrdersEnd")
+
 		ib.ReqOpenOrders()
 		<-openOrdersChan
 		// Get and sync completed orders
-		completedOrdersChan, _ := Subscribe("CompletedOrdersEnd")
-		// defer unsubscribe()
+		completedOrdersChan, _ := ib.pubSub.Subscribe("CompletedOrdersEnd")
+
 		ib.ReqCompletedOrders(false)
 		<-completedOrdersChan
 	}
 	if ib.config.Account != "" {
-		accountUpdatesChan, _ := Subscribe("AccountDownloadEnd")
-		// defer unsubscribe()
+		accountUpdatesChan, _ := ib.pubSub.Subscribe("AccountDownloadEnd")
+
 		ib.ReqAccountUpdates(true, ib.config.Account)
 		<-accountUpdatesChan
 	}
@@ -131,9 +144,9 @@ func (ib *IB) SetTimeout(Timeout time.Duration) {
 
 // ManagedAccounts returns a list of account names.
 func (ib *IB) ManagedAccounts() []string {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	return append(state.accounts[:0:0], state.accounts...)
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
+	return append(ib.state.accounts[:0:0], ib.state.accounts...)
 }
 
 // IsPaperAccount checks if the accounts are paper accounts
@@ -149,10 +162,10 @@ func (ib *IB) IsFinancialAdvisorAccount() bool {
 // NextID returns a local next ID. It is initialised at connection.
 // NextID = -1 if non initialised.
 func (ib *IB) NextID() int64 {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	currentID := state.nextValidID
-	state.nextValidID++
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
+	currentID := ib.state.nextValidID
+	ib.state.nextValidID++
 	return currentID
 }
 
@@ -161,10 +174,10 @@ func (ib *IB) NextID() int64 {
 // If no account is provided it will return values of all accounts.
 // Account values need to be subscribed by ReqAccountUpdates. This is done at start up unless WithoutSync option is used.
 func (ib *IB) AccountValues(account ...string) AccountValues {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var avs AccountValues
-	for _, v := range state.updateAccountValues {
+	for _, v := range ib.state.updateAccountValues {
 		if len(account) == 0 || slices.Contains(account, v.Account) {
 			avs = append(avs, v)
 		}
@@ -178,14 +191,14 @@ func (ib *IB) AccountValues(account ...string) AccountValues {
 // On the first run it is calling ReqAccountSummary and is blocking, after it returns the last summary requested.
 // To request a new summary call ReqAccountSummary.
 func (ib *IB) AccountSummary(account ...string) AccountSummary {
-	state.mu.Lock()
+	ib.state.mu.Lock()
 	var as AccountSummary
-	for _, v := range state.accountSummary {
+	for _, v := range ib.state.accountSummary {
 		if len(account) == 0 || slices.Contains(account, v.Account) {
 			as = append(as, v)
 		}
 	}
-	state.mu.Unlock()
+	ib.state.mu.Unlock()
 	if len(as) != 0 {
 		return as
 	}
@@ -212,10 +225,10 @@ func (ib *IB) AccountSummary(account ...string) AccountSummary {
 // If no account is provided it will return items of all accounts.
 // Portfolios need to be subscribed by ReqAccountUpdates. This is done at start up unless WithoutSync option is used.
 func (ib *IB) Portfolio(account ...string) []PortfolioItem {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var pis []PortfolioItem
-	for acc, piMap := range state.portfolio {
+	for acc, piMap := range ib.state.portfolio {
 		if len(account) == 0 || slices.Contains(account, acc) {
 			for _, pi := range piMap {
 				pis = append(pis, pi)
@@ -240,10 +253,10 @@ func (ib *IB) CancelPositions() {
 // If no account is provided it will return positions of all accounts.
 // Positions need to be subscribed with ReqPositions first.
 func (ib *IB) Positions(account ...string) []Position {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ps []Position
-	for acc, pMap := range state.positions {
+	for acc, pMap := range ib.state.positions {
 		if len(account) == 0 || slices.Contains(account, acc) {
 			for _, p := range pMap {
 				ps = append(ps, p)
@@ -260,7 +273,7 @@ func (ib *IB) Positions(account ...string) []Position {
 func (ib *IB) PositionChan(account ...string) chan Position {
 	ctx := ib.eClient.Ctx
 	positionChan := make(chan Position)
-	ch, unsubscribe := Subscribe("Position")
+	ch, unsubscribe := ib.pubSub.Subscribe("Position")
 	var once sync.Once
 
 	go func() {
@@ -295,28 +308,28 @@ func (ib *IB) ReqPnL(account string, modelCode string) {
 	reqID := ib.NextID()
 	key := Key(account, modelCode)
 
-	state.mu.Lock()
-	_, ok := state.pnlKey2ReqID[key]
+	ib.state.mu.Lock()
+	_, ok := ib.state.pnlKey2ReqID[key]
 	if ok {
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Msg("Pnl request already made")
 		return
 	}
-	state.pnlKey2ReqID[key] = reqID
-	state.reqID2Pnl[reqID] = &Pnl{Account: account, ModelCode: modelCode}
-	state.mu.Unlock()
+	ib.state.pnlKey2ReqID[key] = reqID
+	ib.state.reqID2Pnl[reqID] = &Pnl{Account: account, ModelCode: modelCode}
+	ib.state.mu.Unlock()
 
 	ib.eClient.ReqPnL(reqID, account, modelCode)
 }
 
 // CancelPnL cancels the PnL update of assigned account.
 func (ib *IB) CancelPnL(account string, modelCode string) {
-	state.mu.Lock()
-	reqID, ok := state.pnlKey2ReqID[Key(account, modelCode)]
+	ib.state.mu.Lock()
+	reqID, ok := ib.state.pnlKey2ReqID[Key(account, modelCode)]
 	if !ok {
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Msg("No pnl request to cancel")
 		return
 	}
-	state.mu.Unlock()
+	ib.state.mu.Unlock()
 	ib.eClient.CancelPnL(reqID)
 }
 
@@ -325,10 +338,10 @@ func (ib *IB) CancelPnL(account string, modelCode string) {
 // If account is an empty string, it returns Pnls for all accounts.
 // If modelCode is an empty string, it returns Pnls for all model codes.
 func (ib *IB) Pnl(account string, modelCode string) []Pnl {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var pnls []Pnl
-	for _, pnl := range state.reqID2Pnl {
+	for _, pnl := range ib.state.reqID2Pnl {
 		if (account == "" || account == pnl.Account) && (modelCode == "" || modelCode == pnl.ModelCode) {
 			pnls = append(pnls, *pnl)
 		}
@@ -342,7 +355,7 @@ func (ib *IB) Pnl(account string, modelCode string) []Pnl {
 func (ib *IB) PnlChan(account string, modelCode string) chan Pnl {
 	ctx := ib.eClient.Ctx
 	pnlChan := make(chan Pnl)
-	ch, unsubscribe := Subscribe("Pnl")
+	ch, unsubscribe := ib.pubSub.Subscribe("Pnl")
 	var once sync.Once
 
 	go func() {
@@ -376,27 +389,27 @@ func (ib *IB) PnlChan(account string, modelCode string) chan Pnl {
 func (ib *IB) ReqPnLSingle(account string, modelCode string, contractID int64) {
 	reqID := ib.NextID()
 	key := Key(account, modelCode, contractID)
-	state.mu.Lock()
-	_, ok := state.pnlSingleKey2ReqID[key]
+	ib.state.mu.Lock()
+	_, ok := ib.state.pnlSingleKey2ReqID[key]
 	if ok {
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Int64("contractID", contractID).Msg("Pnl single request already made")
 		return
 	}
-	state.pnlSingleKey2ReqID[key] = reqID
-	state.reqID2PnlSingle[reqID] = &PnlSingle{Account: account, ModelCode: modelCode, ConID: contractID}
-	state.mu.Unlock()
+	ib.state.pnlSingleKey2ReqID[key] = reqID
+	ib.state.reqID2PnlSingle[reqID] = &PnlSingle{Account: account, ModelCode: modelCode, ConID: contractID}
+	ib.state.mu.Unlock()
 	ib.eClient.ReqPnLSingle(reqID, account, modelCode, contractID)
 }
 
 // CancelPnLSingle cancels the single contract PnL update of assigned account.
 func (ib *IB) CancelPnLSingle(account string, modelCode string, contractID int64) {
-	state.mu.Lock()
-	reqID, ok := state.pnlSingleKey2ReqID[Key(account, modelCode, contractID)]
+	ib.state.mu.Lock()
+	reqID, ok := ib.state.pnlSingleKey2ReqID[Key(account, modelCode, contractID)]
 	if !ok {
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Int64("contractID", contractID).Msg("No pnl single request to cancel")
 		return
 	}
-	state.mu.Unlock()
+	ib.state.mu.Unlock()
 	ib.eClient.CancelPnLSingle(reqID)
 }
 
@@ -406,10 +419,10 @@ func (ib *IB) CancelPnLSingle(account string, modelCode string, contractID int64
 // If modelCode is an empty string, it returns PnlSingles for all model codes.
 // If contractID is zero, it returns PnlSingles for all contracts.
 func (ib *IB) PnlSingle(account string, modelCode string, contractID int64) []PnlSingle {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var pnlSingles []PnlSingle
-	for _, pnlSingle := range state.reqID2PnlSingle {
+	for _, pnlSingle := range ib.state.reqID2PnlSingle {
 		if (account == "" || account == pnlSingle.Account) && (modelCode == "" || modelCode == pnlSingle.ModelCode) && (contractID == 0 || contractID == pnlSingle.ConID) {
 			pnlSingles = append(pnlSingles, *pnlSingle)
 		}
@@ -423,7 +436,7 @@ func (ib *IB) PnlSingle(account string, modelCode string, contractID int64) []Pn
 func (ib *IB) PnlSingleChan(account string, modelCode string, contractID int64) chan PnlSingle {
 	ctx := ib.eClient.Ctx
 	pnlSingleChan := make(chan PnlSingle)
-	ch, unsubscribe := Subscribe("PnlSingle")
+	ch, unsubscribe := ib.pubSub.Subscribe("PnlSingle")
 	var once sync.Once
 
 	go func() {
@@ -453,10 +466,10 @@ func (ib *IB) PnlSingleChan(account string, modelCode string, contractID int64) 
 
 // Trades returns a slice of all trades from this session
 func (ib *IB) Trades() []*Trade {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ts []*Trade
-	for _, t := range state.trades {
+	for _, t := range ib.state.trades {
 		ts = append(ts, t)
 	}
 	return ts
@@ -464,10 +477,10 @@ func (ib *IB) Trades() []*Trade {
 
 // OpenTrades returns a slice of copies of all open trades from this session
 func (ib *IB) OpenTrades() []*Trade {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ts []*Trade
-	for _, t := range state.trades {
+	for _, t := range ib.state.trades {
 		if !t.IsDone() {
 			ts = append(ts, t)
 		}
@@ -477,10 +490,10 @@ func (ib *IB) OpenTrades() []*Trade {
 
 // Orders returns a slice of all orders from this session
 func (ib *IB) Orders() []Order {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ts []Order
-	for _, t := range state.trades {
+	for _, t := range ib.state.trades {
 		ts = append(ts, *t.Order)
 	}
 	return ts
@@ -488,10 +501,10 @@ func (ib *IB) Orders() []Order {
 
 // OpenOrders returns a slice of all open orders from this session
 func (ib *IB) OpenOrders() []Order {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ts []Order
-	for _, t := range state.trades {
+	for _, t := range ib.state.trades {
 		if !t.IsDone() {
 			ts = append(ts, *t.Order)
 		}
@@ -501,18 +514,18 @@ func (ib *IB) OpenOrders() []Order {
 
 // Ticker returns a *Ticker for the provided and contract and a bool to tell if the ticker exists.
 func (ib *IB) Ticker(contract *Contract) (*Ticker, bool) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	val, exists := state.tickers[contract]
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
+	val, exists := ib.state.tickers[contract]
 	return val, exists
 }
 
 // Tickers returns a slice of all Tickers
 func (ib *IB) Tickers() []*Ticker {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var ts []*Ticker
-	for _, t := range state.tickers {
+	for _, t := range ib.state.tickers {
 		ts = append(ts, t)
 	}
 	return ts
@@ -520,9 +533,9 @@ func (ib *IB) Tickers() []*Ticker {
 
 // NewTick returns the list of NewsTick
 func (ib *IB) NewsTick() []NewsTick {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	return append(state.newsTicks[:0:0], state.newsTicks...)
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
+	return append(ib.state.newsTicks[:0:0], ib.state.newsTicks...)
 }
 
 // ReqCurrentTime asks the current system time on the server side.
@@ -531,7 +544,7 @@ func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("CurrentTime")
+	ch, unsubscribe := ib.pubSub.Subscribe("CurrentTime")
 	defer unsubscribe()
 
 	ib.eClient.ReqCurrentTime()
@@ -552,7 +565,7 @@ func (ib *IB) ReqCurrentTimeInMillis() (int64, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("CurrentTimeInMillis")
+	ch, unsubscribe := ib.pubSub.Subscribe("CurrentTimeInMillis")
 	defer unsubscribe()
 
 	ib.eClient.ReqCurrentTimeInMillis()
@@ -606,9 +619,9 @@ func (ib *IB) SetLogLevel(logLevel int64) {
 func (ib *IB) ReqMktData(contract *Contract, genericTickList string, mktDataOptions ...TagValue) *Ticker {
 	reqID := ib.NextID()
 
-	state.mu.Lock()
-	ticker := state.startTicker(reqID, contract, "mktData")
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.startTicker(reqID, contract, "mktData")
+	ib.state.mu.Unlock()
 
 	ib.eClient.ReqMktData(reqID, contract, genericTickList, false, false, mktDataOptions)
 
@@ -619,10 +632,10 @@ func (ib *IB) ReqMktData(contract *Contract, genericTickList string, mktDataOpti
 //
 // Do not use CancelMktData for Snapshot() calls
 func (ib *IB) CancelMktData(contract *Contract) {
-	state.mu.Lock()
-	ticker := state.tickers[contract]
-	reqID, ok := state.endTicker(ticker, "mktData")
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.tickers[contract]
+	reqID, ok := ib.state.endTicker(ticker, "mktData")
+	ib.state.mu.Unlock()
 
 	if !ok {
 		log.Error().Err(errUnknowReqID).Int64("conID", contract.ConID).Msg("<CancelMktData>")
@@ -642,17 +655,17 @@ func (ib *IB) Snapshot(contract *Contract, regulatorySnapshot ...bool) (*Ticker,
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
-	state.mu.Lock()
-	ticker := state.startTicker(reqID, contract, "snapshot")
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.startTicker(reqID, contract, "snapshot")
+	ib.state.mu.Unlock()
 
 	defer func() {
-		state.mu.Lock()
-		state.endTicker(ticker, "snapshot")
-		state.mu.Unlock()
+		ib.state.mu.Lock()
+		ib.state.endTicker(ticker, "snapshot")
+		ib.state.mu.Unlock()
 	}()
 
 	regulatory := false
@@ -712,7 +725,7 @@ func (ib *IB) ReqSmartComponents(bboExchange string) ([]SmartComponent, error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqSmartComponents(reqID, bboExchange)
@@ -741,7 +754,7 @@ func (ib *IB) ReqMarketRule(marketRuleID int64) ([]PriceIncrement, error) {
 
 	topic := Key("MarketRule", marketRuleID)
 
-	ch, unsubscribe := Subscribe(topic)
+	ch, unsubscribe := ib.pubSub.Subscribe(topic)
 	defer unsubscribe()
 
 	ib.eClient.ReqMarketRule(marketRuleID)
@@ -768,9 +781,9 @@ func (ib *IB) ReqMarketRule(marketRuleID int64) ([]PriceIncrement, error) {
 func (ib *IB) ReqTickByTickData(contract *Contract, tickType string, numberOfTicks int64, ignoreSize bool) *Ticker {
 	reqID := ib.NextID()
 
-	state.mu.Lock()
-	ticker := state.startTicker(reqID, contract, tickType)
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.startTicker(reqID, contract, tickType)
+	ib.state.mu.Unlock()
 
 	ib.eClient.ReqTickByTickData(reqID, contract, tickType, numberOfTicks, ignoreSize)
 
@@ -779,10 +792,10 @@ func (ib *IB) ReqTickByTickData(contract *Contract, tickType string, numberOfTic
 
 // CancelTickByTickData unsubscribes from tick-by-tick for given contract and tick type.
 func (ib *IB) CancelTickByTickData(contract *Contract, tickType string) error {
-	state.mu.Lock()
-	ticker := state.tickers[contract]
-	reqID, ok := state.endTicker(ticker, tickType)
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.tickers[contract]
+	reqID, ok := ib.state.endTicker(ticker, tickType)
+	ib.state.mu.Unlock()
 
 	if !ok {
 		log.Error().Err(errUnknowReqID).Int64("conID", contract.ConID).Msg("<CancelTickByTickData>")
@@ -803,7 +816,7 @@ func (ib *IB) MidPoint(contract *Contract) (TickByTickMidPoint, error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqTickByTickData(reqID, contract, "MidPoint", 0, true)
@@ -831,7 +844,7 @@ func (ib *IB) CalculateImpliedVolatility(contract *Contract, optionPrice float64
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.CalculateImpliedVolatility(reqID, contract, optionPrice, underPrice, impVolOptions)
@@ -866,7 +879,7 @@ func (ib *IB) CalculateOptionPrice(contract *Contract, volatility float64, under
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.CalculateOptionPrice(reqID, contract, volatility, underPrice, optPrcOptions)
@@ -908,10 +921,10 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 
 	key := orderKey(order.ClientID, order.OrderID, order.PermID)
 
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 
-	trade, ok := state.trades[key]
+	trade, ok := ib.state.trades[key]
 	if ok {
 		// modification of an existing order
 		if trade.IsDone() {
@@ -929,7 +942,7 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 		order.ClientID = ib.config.ClientID
 		trade = NewTrade(contract, order)
 		key = orderKey(order.ClientID, order.OrderID, order.PermID) // clientID is updated
-		state.trades[key] = trade
+		ib.state.trades[key] = trade
 		log.Debug().Int64("orderID", order.OrderID).Str("message", "open order").Msg("<PlaceOrder>")
 	}
 	return trade
@@ -1033,7 +1046,7 @@ func (ib *IB) ReqAccountSummary(groupName string, tags string) (AccountSummary, 
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqAccountSummary(reqID, groupName, tags)
@@ -1086,10 +1099,10 @@ func (ib *IB) CancelAccountUpdatesMulti(reqID int64) {
 // Executions returns a slice of all the executions from this session.
 // To get executions from previous sessions of the day you must call reqExecutions.
 func (ib *IB) Executions(execFilter ...*ExecutionFilter) []Execution {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var es []Execution
-	for _, f := range state.fills {
+	for _, f := range ib.state.fills {
 		if len(execFilter) == 0 {
 			es = append(es, *f.Execution)
 			continue
@@ -1111,7 +1124,7 @@ func (ib *IB) ReqExecutions(execFilter ...*ExecutionFilter) ([]Execution, error)
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 100)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 100)
 	defer unsubscribe()
 
 	ef := ibapi.NewExecutionFilter()
@@ -1142,10 +1155,10 @@ func (ib *IB) ReqExecutions(execFilter ...*ExecutionFilter) ([]Execution, error)
 // Fills returns a slice of all the fills from this session.
 // To get fills from previous sessions of the day you must call reqFills.
 func (ib *IB) Fills(execFilter ...*ExecutionFilter) []Fill {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var fs []Fill
-	for _, f := range state.fills {
+	for _, f := range ib.state.fills {
 		if len(execFilter) == 0 {
 			fs = append(fs, *f)
 			continue
@@ -1163,7 +1176,7 @@ func (ib *IB) ReqFills(execFilter ...*ExecutionFilter) ([]Fill, error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 100)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 100)
 	defer unsubscribe()
 
 	ef := ibapi.NewExecutionFilter()
@@ -1200,7 +1213,7 @@ func (ib *IB) ReqContractDetails(contract *Contract) ([]ContractDetails, error) 
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 50)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 50)
 	defer unsubscribe()
 
 	ib.eClient.ReqContractDetails(reqID, contract)
@@ -1291,7 +1304,7 @@ func (ib *IB) ReqMktDepthExchanges() ([]DepthMktDataDescription, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("MktDepthExchanges")
+	ch, unsubscribe := ib.pubSub.Subscribe("MktDepthExchanges")
 	defer unsubscribe()
 
 	ib.eClient.ReqMktDepthExchanges()
@@ -1324,19 +1337,19 @@ func (ib *IB) ReqMktDepth(contract *Contract, numRows int, isSmartDepth bool, mk
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
-	state.mu.Lock()
-	ticker := state.startTicker(reqID, contract, "mktDepth")
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.startTicker(reqID, contract, "mktDepth")
+	ib.state.mu.Unlock()
 
 	ib.eClient.ReqMktDepth(reqID, contract, numRows, isSmartDepth, mktDepthOptions)
 
 	cancelMktDepth := func() {
-		state.mu.Lock()
-		state.endTicker(ticker, "mktDepth")
-		state.mu.Unlock()
+		ib.state.mu.Lock()
+		ib.state.endTicker(ticker, "mktDepth")
+		ib.state.mu.Unlock()
 		ib.eClient.CancelMktDepth(reqID, isSmartDepth)
 	}
 
@@ -1356,10 +1369,10 @@ func (ib *IB) ReqMktDepth(contract *Contract, numRows int, isSmartDepth bool, mk
 
 // CancelMktDepth cancels market depth updates.
 func (ib *IB) CancelMktDepth(contract *Contract, isSmartDepth bool) error {
-	state.mu.Lock()
-	ticker := state.tickers[contract]
-	reqID, ok := state.endTicker(ticker, "mktDepth")
-	state.mu.Unlock()
+	ib.state.mu.Lock()
+	ticker := ib.state.tickers[contract]
+	reqID, ok := ib.state.endTicker(ticker, "mktDepth")
+	ib.state.mu.Unlock()
 
 	if !ok {
 		log.Error().Err(errUnknowReqID).Int64("conID", contract.ConID).Msg("<CancelMktDepth>")
@@ -1389,10 +1402,10 @@ func (ib *IB) CancelNewsBulletins() {
 
 // NewsBulletins returns a slice of all received NewsBulletin instances.
 func (ib *IB) NewsBulletins() []NewsBulletin {
-	state.mu.Lock()
-	defer state.mu.Unlock()
+	ib.state.mu.Lock()
+	defer ib.state.mu.Unlock()
 	var nbs []NewsBulletin
-	for _, nb := range state.msgID2NewsBulletin {
+	for _, nb := range ib.state.msgID2NewsBulletin {
 		nbs = append(nbs, nb)
 	}
 	return nbs
@@ -1404,7 +1417,7 @@ func (ib *IB) NewsBulletins() []NewsBulletin {
 func (ib *IB) NewsBulletinsChan() chan NewsBulletin {
 	ctx := ib.eClient.Ctx
 	nbChan := make(chan NewsBulletin)
-	ch, unsubscribe := Subscribe("NewsBulletin")
+	ch, unsubscribe := ib.pubSub.Subscribe("NewsBulletin")
 	var once sync.Once
 	go func() {
 		defer unsubscribe()
@@ -1439,7 +1452,7 @@ func (ib *IB) RequestFA(faDataType FaDataType) (cxml string, err error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("ReceiveFA")
+	ch, unsubscribe := ib.pubSub.Subscribe("ReceiveFA")
 	defer unsubscribe()
 
 	ib.eClient.RequestFA(faDataType)
@@ -1471,7 +1484,7 @@ func (ib *IB) ReplaceFA(faDataType FaDataType, cxml string) (string, error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReplaceFA(reqID, faDataType, cxml)
@@ -1563,7 +1576,7 @@ func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 100)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 100)
 
 	ib.eClient.ReqHistoricalData(reqID, contract, endDateTime, duration, barSize, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions)
 
@@ -1636,7 +1649,7 @@ func (ib *IB) ReqHistoricalSchedule(contract *Contract, endDateTime string, dura
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistoricalData(reqID, contract, endDateTime, duration, "1 day", "SCHEDULE", useRTH, 1, false, nil)
@@ -1670,7 +1683,7 @@ func (ib *IB) ReqHeadTimeStamp(contract *Contract, whatToShow string, useRTH boo
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHeadTimeStamp(reqID, contract, whatToShow, useRTH, formatDate)
@@ -1703,7 +1716,7 @@ func (ib *IB) ReqHistogramData(contract *Contract, useRTH bool, timePeriod strin
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistogramData(reqID, contract, useRTH, timePeriod)
@@ -1740,7 +1753,7 @@ func (ib *IB) ReqHistoricalTicks(contract *Contract, startDateTime, endDateTime 
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistoricalTicks(reqID, contract, FormatIBTimeUSEastern(startDateTime), FormatIBTimeUSEastern(endDateTime), numberOfTicks, "MIDPOINT", useRTH, ignoreSize, miscOptions)
@@ -1783,7 +1796,7 @@ func (ib *IB) ReqHistoricalTickLast(contract *Contract, startDateTime, endDateTi
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistoricalTicks(reqID, contract, FormatIBTimeUSEastern(startDateTime), FormatIBTimeUSEastern(endDateTime), numberOfTicks, "TRADES", useRTH, ignoreSize, miscOptions)
@@ -1826,7 +1839,7 @@ func (ib *IB) ReqHistoricalTickBidAsk(contract *Contract, startDateTime, endDate
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistoricalTicks(reqID, contract, FormatIBTimeUSEastern(startDateTime), FormatIBTimeUSEastern(endDateTime), numberOfTicks, "BID_ASK", useRTH, ignoreSize, miscOptions)
@@ -1858,7 +1871,7 @@ func (ib *IB) ReqScannerParameters() (xml string, err error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("ScannerParameters")
+	ch, unsubscribe := ib.pubSub.Subscribe("ScannerParameters")
 	defer unsubscribe()
 
 	ib.eClient.ReqScannerParameters()
@@ -1885,7 +1898,7 @@ func (ib *IB) ReqScannerSubscription(subscription *ScannerSubscription, scannerS
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 50)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 50)
 	defer unsubscribe()
 
 	var options, filterOptions []TagValue
@@ -1949,7 +1962,7 @@ func (ib *IB) ReqRealTimeBars(contract *Contract, barSize int, whatToShow string
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 100)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 100)
 
 	ib.eClient.ReqRealTimeBars(reqID, contract, barSize, whatToShow, useRTH, realTimeBarsOptions)
 
@@ -2025,7 +2038,7 @@ func (ib *IB) ReqFundamentalData(contract *Contract, reportType string, fundamen
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqFundamentalData(reqID, contract, reportType, fundamentalDataOptions)
@@ -2046,7 +2059,7 @@ func (ib *IB) ReqNewsProviders() ([]NewsProvider, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("NewsProvider")
+	ch, unsubscribe := ib.pubSub.Subscribe("NewsProvider")
 	defer unsubscribe()
 
 	ib.eClient.ReqNewsProviders()
@@ -2072,7 +2085,7 @@ func (ib *IB) ReqNewsArticle(providerCode string, articleID string, newsArticleO
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqNewsArticle(reqID, providerCode, articleID, newsArticleOptions)
@@ -2104,7 +2117,7 @@ func (ib *IB) ReqHistoricalNews(contractID int64, providerCode string, startDate
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 50)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 50)
 	defer unsubscribe()
 
 	ib.eClient.ReqHistoricalNews(reqID, contractID, providerCode, FormatIBTime(startDateTime), FormatIBTime(endDateTime), totalResults, historicalNewsOptions)
@@ -2147,7 +2160,7 @@ func (ib *IB) QueryDisplayGroups() (groups string, err error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.QueryDisplayGroups(reqID)
@@ -2223,7 +2236,7 @@ func (ib *IB) ReqSecDefOptParams(underlyingSymbol string, futFopExchange string,
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID, 50)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID, 50)
 	defer unsubscribe()
 
 	ib.eClient.ReqSecDefOptParams(reqID, underlyingSymbol, futFopExchange, underlyingSecurityType, underlyingContractID)
@@ -2257,7 +2270,7 @@ func (ib *IB) ReqSoftDollarTiers() ([]SoftDollarTier, error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqSoftDollarTiers(reqID)
@@ -2279,7 +2292,7 @@ func (ib *IB) ReqFamilyCodes() ([]FamilyCode, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
 	defer cancel()
 
-	ch, unsubscribe := Subscribe("FamilyCodes")
+	ch, unsubscribe := ib.pubSub.Subscribe("FamilyCodes")
 	defer unsubscribe()
 
 	ib.eClient.ReqFamilyCodes()
@@ -2303,7 +2316,7 @@ func (ib *IB) ReqMatchingSymbols(pattern string) ([]ContractDescription, error) 
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqMatchingSymbols(reqID, pattern)
@@ -2334,7 +2347,7 @@ func (ib *IB) ReqWshMetaData() (dataJson string, err error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqWshMetaData(reqID)
@@ -2358,7 +2371,7 @@ func (ib *IB) ReqWshEventData(wshEventData WshEventData) (dataJson string, err e
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqWshEventData(reqID, wshEventData)
@@ -2382,7 +2395,7 @@ func (ib *IB) ReqUserInfo() (whiteBrandingId string, err error) {
 
 	reqID := ib.NextID()
 
-	ch, unsubscribe := Subscribe(reqID)
+	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
 	defer unsubscribe()
 
 	ib.eClient.ReqUserInfo(reqID)
