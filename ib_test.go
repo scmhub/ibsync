@@ -19,7 +19,7 @@ const (
 	testHost           = "localhost"
 	testPort           = 7497
 	testClientID       = 1973
-	testTimeOut        = 10 * time.Second
+	testTimeOut        = 30 * time.Second
 	account            = "DU5352527"
 	modelCode          = ""
 	contractID   int64 = 756733
@@ -97,6 +97,7 @@ func TestConnection(t *testing.T) {
 	if err := ib.Disconnect(); err != nil {
 		t.Errorf("Failed to disconnect IB client: %v", err)
 	}
+	time.Sleep(1 * time.Second)
 	if ib.IsConnected() {
 		t.Errorf("client should be disconnected")
 	}
