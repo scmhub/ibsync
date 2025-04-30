@@ -49,14 +49,13 @@ func NewFuture(symbol, lastTradeDateOrContractMonth string, exchange, multiplier
 	return contract
 }
 
-// NewConFuture creates a continuous future contract (CONFUT) for the given symbol, exchange, contract size, and currency.
+// NewContFuture creates a continuous future contract (CONFUT) for the given symbol, exchange, contract size, and currency.
 // A continuous future contract represents a series of futures contracts for the same asset.
-func NewConFuture(symbol, exchange, multiplier, currency string) *Contract {
+func NewContFuture(symbol, exchange, multiplier, currency string) *Contract {
 
 	contract := NewContract()
-	contract.Symbol = symbol // NewFutureOption creates a future option contract (FOP) for the specified symbol, expiration date, strike price,
-	// option right (call or put), exchange, contract size (multiplier), and currency.
-	contract.SecType = "CONFUT"
+	contract.Symbol = symbol
+	contract.SecType = "CONTFUT"
 	contract.Currency = currency
 	contract.Exchange = exchange
 	contract.Multiplier = multiplier
