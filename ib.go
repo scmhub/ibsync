@@ -3,10 +3,13 @@ package ibsync
 import (
 	"context"
 	"errors"
+	"os"
+	"os/signal"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/scmhub/ibapi"
@@ -117,6 +120,24 @@ func (ib *IB) Connect(config ...*Config) error {
 	}
 
 	log.Info().Msg("client in sync with the TWS/IBG application")
+	return nil
+}
+
+// ConnectWithGracefulShutdown connects and sets up signal handling for graceful shutdown.
+// This is a convenience for simple apps. Advanced users should handle signals themselves.
+func (ib *IB) ConnectWithGracefulShutdown(config ...*Config) error {
+	err := ib.Connect(config...)
+	if err != nil {
+		return err
+	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		log.Warn().Msg("detected termination signal, shutting down gracefully")
+		ib.Disconnect()
+		os.Exit(0)
+	}()
 	return nil
 }
 
