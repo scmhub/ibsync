@@ -41,7 +41,7 @@ func main() {
 	// We get ibsync logger
 	log := ibsync.Logger()
 	// Set log level to Debug
-	ibsync.SetLogLevel(int(zerolog.TraceLevel))
+	ibsync.SetLogLevel(int(zerolog.InfoLevel))
 	// Set logger for pretty logs to console
 	ibsync.SetConsoleWriter()
 
@@ -132,13 +132,13 @@ func main() {
 		return
 	}
 
-	// // Fills
-	// fills := ib.Fills()
-	// fmt.Println("fills", fills)
+	// Fills
+	fills := ib.Fills()
+	fmt.Println("fills", fills)
 
-	// // Executions
-	// executions := ib.Executions()
-	// fmt.Println("executions", executions)
+	// Executions
+	executions := ib.Executions()
+	fmt.Println("executions", executions)
 
 	// // User info
 	// whiteBrandingId, _ := ib.ReqUserInfo()
