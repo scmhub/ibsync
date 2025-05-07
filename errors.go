@@ -30,6 +30,7 @@ var (
 // warnigCodes are errors codes received from TWS that should be treated as warnings
 var warningCodes = []int64{ //
 	161,   // Cancel attempted when order is not in a cancellable state. Order permId = // An attempt was made to cancel an order not active at the time.
+	162,   // Historical market data Service error message.	<- This error is triggered on historical data cancel.
 	202,   // Order cancelled – Reason:	An active order on the IB server was cancelled. // See Order Placement Considerations for additional information/considerations for these errors.
 	2104,  // Market data farm connection is OK.
 	2106,  // A historical data farm is connected.
@@ -62,7 +63,7 @@ var (
 // IB errors can have different error messages for a given code.
 // We get rid of the original message in order to have consitent errors.
 // Original message can be seen in the logs.
-func normaliseCodeMsgPair(cmp ibapi.CodeMsgPair) error {
+func normaliseCodeMsgPair(cmp ibapi.CodeMsgPair) ibapi.CodeMsgPair {
 	switch cmp.Code {
 	case 2104, 2106, 2107, 2108, 21019:
 		return cmp

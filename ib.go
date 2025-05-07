@@ -1603,8 +1603,9 @@ func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration
 
 	barChan := make(chan Bar, 100)
 
-	cancel := func() {
-		ib.eClient.CancelHistoricalData(reqID)
+	cancel := func() { ib.eClient.CancelHistoricalData(reqID) }
+
+	closeChans := func() {
 		unsubscribe()
 		// drains and safely closes the channel.
 		for {
@@ -1624,7 +1625,7 @@ func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration
 	}
 
 	go func() {
-		defer cancel()
+		defer closeChans()
 		for {
 			select {
 			case <-ctx.Done():
@@ -1635,7 +1636,12 @@ func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration
 					return
 				}
 				if isErrorMsg(msg) {
-					log.Error().Err(msg2Error(msg)).Int64("reqID", reqID).Msg("<ReqHistoricalData>")
+					err := msg2Error(msg)
+					if err.Code == 161 || err.Code == 162 {
+						log.Warn().Err(err).Int64("reqID", reqID).Msg("<ReqHistoricalData>")
+					} else {
+						log.Error().Err(err).Int64("reqID", reqID).Msg("<ReqHistoricalData>")
+					}
 					return
 				}
 				items := Split(msg)

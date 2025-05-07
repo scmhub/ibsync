@@ -64,10 +64,10 @@ func isErrorMsg(msg string) bool {
 }
 
 // msg2Error decodes msg to ibapi CodeMsgPair
-func msg2Error(msg string) error {
+func msg2Error(msg string) ibapi.CodeMsgPair {
 	var cmp ibapi.CodeMsgPair
 	if err := Decode(&cmp, Split(msg)[1]); err != nil {
-		return err
+		return ibapi.CodeMsgPair{Code: -1, Msg: fmt.Sprintf("error decoding error %s", msg)}
 	}
 	return normaliseCodeMsgPair(cmp)
 }

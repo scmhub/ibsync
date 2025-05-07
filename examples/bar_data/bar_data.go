@@ -27,7 +27,7 @@ func main() {
 	// New IB client & Connect
 	ib := ibsync.NewIB()
 
-	err := ib.Connect(
+	err := ib.ConnectWithGracefulShutdown(
 		ibsync.NewConfig(
 			ibsync.WithHost(host),
 			ibsync.WithPort(port),
@@ -66,9 +66,10 @@ func main() {
 		fmt.Println(bar)
 		bars = append(bars, bar)
 	}
+
 	fmt.Println("Number of bars:", len(bars))
-	fmt.Println("FirstBar", bars[0])
-	fmt.Println("LastBar", bars[len(bars)-1])
+	fmt.Println("First Bar", bars[0])
+	fmt.Println("Last Bar", bars[len(bars)-1])
 
 	// Historical Data with realtime Updates
 	duration = "60 S"
@@ -114,5 +115,10 @@ func main() {
 	time.Sleep(10 * time.Second)
 	cancel()
 
+	fmt.Println("Number of RT bars:", len(rtBars))
+	fmt.Println("First RT Bar", rtBars[0])
+	fmt.Println("Last RT Bar", rtBars[len(rtBars)-1])
+
+	time.Sleep(1 * time.Second)
 	log.Info().Msg("Good Bye!!!")
 }
