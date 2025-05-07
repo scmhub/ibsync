@@ -86,7 +86,7 @@ func (ib *IB) Connect(config ...*Config) error {
 
 	time.Sleep(500 * time.Millisecond)
 
-	// bind manual orders
+	// bind manual orders from TWS if clientID is 0
 	if ib.config.ClientID == 0 {
 		ib.ReqAutoOpenOrders(true)
 	}
@@ -95,28 +95,32 @@ func (ib *IB) Connect(config ...*Config) error {
 	if ib.config.Account == "" && len(accounts) == 1 {
 		ib.config.Account = accounts[0]
 	}
+
 	if !ib.config.InSync {
 		log.Warn().Msg("this client will not be kept in sync with the TWS/IBG application")
 		return nil
 	}
-	// Start sync
+
+	// Start sync if WithoutSync option is not used
 	if !ib.config.ReadOnly {
 		// Get and sync open orders
-		openOrdersChan, _ := ib.pubSub.Subscribe("OpenOrdersEnd")
+		err := ib.ReqOpenOrders()
+		if err != nil {
+			return err
+		}
 
-		ib.ReqOpenOrders()
-		<-openOrdersChan
 		// Get and sync completed orders
-		completedOrdersChan, _ := ib.pubSub.Subscribe("CompletedOrdersEnd")
-
-		ib.ReqCompletedOrders(false)
-		<-completedOrdersChan
+		err = ib.ReqCompletedOrders(false)
+		if err != nil {
+			return err
+		}
 	}
 	if ib.config.Account != "" {
-		accountUpdatesChan, _ := ib.pubSub.Subscribe("AccountDownloadEnd")
-
-		ib.ReqAccountUpdates(true, ib.config.Account)
-		<-accountUpdatesChan
+		// Get and sync account updates
+		err = ib.ReqAccountUpdates(true, ib.config.Account)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Info().Msg("client in sync with the TWS/IBG application")
@@ -986,9 +990,24 @@ func (ib *IB) ReqGlobalCancel() {
 // The client with a clientId of 0 will also receive the TWS-owned open orders.
 // These orders will be associated with the client and a new orderId will be generated.
 // This association will persist over multiple API and TWS sessions.
-func (ib *IB) ReqOpenOrders() {
+func (ib *IB) ReqOpenOrders() error {
 	log.Debug().Msg("<ReqOpenOrders>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	defer cancel()
+
+	ch, unsubscribe := ib.pubSub.Subscribe("OpenOrdersEnd")
+	defer unsubscribe()
+
 	ib.eClient.ReqOpenOrders()
+
+	select {
+	case <-ctx.Done():
+		log.Error().Err(ctx.Err()).Msg("<ReqOpenOrders>")
+		return ctx.Err()
+	case <-ch:
+		return nil
+	}
 }
 
 // ReqAutoOpenOrders requests that newly created TWS orders be implicitly associated with the client.
@@ -1003,14 +1022,45 @@ func (ib *IB) ReqAutoOpenOrders(autoBind bool) {
 // ReqAllOpenOrders requests the open orders placed from all clients and also from TWS.
 // Each open order will be fed back through the openOrder() and orderStatus() functions on the EWrapper.
 // No association is made between the returned orders and the requesting client.
-func (ib *IB) ReqAllOpenOrders() {
+func (ib *IB) ReqAllOpenOrders() error {
 	log.Debug().Msg("<ReqAllOpenOrders>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	defer cancel()
+
+	ch, unsubscribe := ib.pubSub.Subscribe("OpenOrdersEnd")
+	defer unsubscribe()
+
 	ib.eClient.ReqAllOpenOrders()
+
+	select {
+	case <-ctx.Done():
+		log.Error().Err(ctx.Err()).Msg("<ReqAllOpenOrders>")
+		return ctx.Err()
+	case <-ch:
+		return nil
+	}
 }
 
 // ReqAccountUpdates will start getting account values, portfolio, and last update time information.
-func (ib *IB) ReqAccountUpdates(subscribe bool, accountName string) {
+func (ib *IB) ReqAccountUpdates(subscribe bool, accountName string) error {
+	log.Debug().Msg("<ReqAccountUpdates>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	defer cancel()
+
+	ch, unsubscribe := ib.pubSub.Subscribe("AccountDownloadEnd")
+	defer unsubscribe()
+
 	ib.eClient.ReqAccountUpdates(subscribe, accountName)
+
+	select {
+	case <-ctx.Done():
+		log.Error().Err(ctx.Err()).Msg("<ReqAccountUpdates>")
+		return ctx.Err()
+	case <-ch:
+		return nil
+	}
 }
 
 // ReqAccountSummary requests and keep up to date the data that appears
@@ -2362,9 +2412,24 @@ func (ib *IB) ReqMatchingSymbols(pattern string) ([]ContractDescription, error) 
 
 // ReqCompletedOrders requests the completed orders
 // If apiOnly parameter is true, then only completed orders placed from API are requested.
-func (ib *IB) ReqCompletedOrders(apiOnly bool) {
+func (ib *IB) ReqCompletedOrders(apiOnly bool) error {
 	log.Debug().Bool("apiOnly", apiOnly).Msg("<ReqCompletedOrders>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	defer cancel()
+
+	completedOrdersChan, unsubscribe := ib.pubSub.Subscribe("CompletedOrdersEnd")
+	defer unsubscribe()
+
 	ib.eClient.ReqCompletedOrders(apiOnly)
+
+	select {
+	case <-ctx.Done():
+		log.Error().Err(ctx.Err()).Msg("<ReqCompletedOrders>")
+		return ctx.Err()
+	case <-completedOrdersChan:
+		return nil
+	}
 }
 
 // ReqWshMetaData requests Wall Street Horizon Meta data
