@@ -7,6 +7,7 @@ package ibsync
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"math"
@@ -693,6 +694,33 @@ func TestQualifyContract(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	t.Logf("AMD after qualifiying:, %v", amd)
+}
+
+func TestJsonCOntract(t *testing.T) {
+	ib := getIB()
+
+	amd := NewStock("AMD", "SMART", "USD")
+	err := ib.QualifyContract(amd)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	byteContract, err := json.Marshal(amd)
+	if err != nil {
+		t.Errorf("json Marshall error: %v", err)
+	}
+	if testing.Verbose() {
+		t.Logf("json contract: %v\n", string(byteContract))
+	}
+
+	var decodedContract Contract
+	err = json.Unmarshal(byteContract, &decodedContract)
+	if err != nil {
+		t.Errorf("json Unmarshall error: %v", err)
+	}
+	if !decodedContract.Equal(amd) {
+		t.Errorf("Decoded contract does not match original contract: %v", amd)
+	}
 }
 
 func TestReqMktDepthExchanges(t *testing.T) {
