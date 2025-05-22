@@ -119,10 +119,9 @@ func main() {
 	sellTrade := ib.PlaceOrder(eurusd, sellOrder)
 
 	fmt.Println("submitted sell trade:", sellTrade)
-	go func() {
-		<-sellTrade.Done()
-		fmt.Println("The sell trade is done!!!")
-	}()
+
+	<-sellTrade.Done()
+	fmt.Println("The sell trade is done!!!")
 
 	// Place buy orders
 	fmt.Println("*** Place Buy orders ***")
@@ -220,7 +219,7 @@ func main() {
 	}
 
 	// Executions & Fills after no filter request
-	execs, err = ib.ReqExecutions(ibsync.NewExecutionFilter())
+	execs, err = ib.ReqExecutions()
 	if err != nil {
 		log.Error().Err(err).Msg("Request Executions")
 		return

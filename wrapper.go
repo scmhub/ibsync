@@ -262,7 +262,9 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 		key := orderKey(execution.ClientID, execution.OrderID, execution.PermID)
 		trade, ok = w.state.trades[key]
 		if !ok {
-			log.Error().Err(errUnknowOrder).Int64("reqID", reqID).Int64("orderID", execution.OrderID).Msg("<ExecDetails>")
+			w.state.trades[strconv.FormatInt(execution.PermID, 10)] = trade
+			trade = NewTrade(contract, nil, OrderStatus{OrderID: execution.OrderID})
+			w.state.permID2Trade[execution.PermID] = trade
 		}
 	}
 	executionTime, err := ParseIBTime(execution.Time)
