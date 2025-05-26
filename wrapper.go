@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/scmhub/ibapi"
+	"github.com/scmhub/ibapi/protobuf"
 )
 
 var _ ibapi.EWrapper = (*WrapperSync)(nil)
@@ -836,4 +837,30 @@ func (w *WrapperSync) UserInfo(reqID int64, whiteBrandingId string) {
 func (w WrapperSync) CurrentTimeInMillis(timeInMillis int64) {
 	log.Debug().Int64("TimeInMillis", timeInMillis).Msg("<CurrentTimeInMillis>")
 	w.pubSub.Publish("CurrentTimeInMillis", Encode(timeInMillis))
+}
+
+// Protobuf
+
+func (w WrapperSync) ExecDetailsProtoBuf(executionDetailsProto *protobuf.ExecutionDetails) {
+	log.Debug().Stringer("ExecutionDetailsProto", executionDetailsProto).Msg("<ExecDetailsProtoBuf>")
+}
+
+func (w WrapperSync) ExecDetailsEndProtoBuf(executionDetailsEndProto *protobuf.ExecutionDetailsEnd) {
+	log.Debug().Stringer("ExecutionDetailsEndProto", executionDetailsEndProto).Msg("<ExecDetailsEndProtoBuf>")
+}
+
+func (w WrapperSync) OrderStatusProtoBuf(orderStatusProto *protobuf.OrderStatus) {
+	log.Debug().Stringer("OrderStatusProto", orderStatusProto).Msg("<OrderStatusProtoBuf>")
+}
+
+func (w WrapperSync) OpenOrderProtoBuf(openOrderProto *protobuf.OpenOrder) {
+	log.Debug().Stringer("OpenOrderProto", openOrderProto).Msg("<OpenOrderProtoBuf>")
+}
+
+func (w WrapperSync) OpenOrdersEndProtoBuf(openOrdersEndProto *protobuf.OpenOrdersEnd) {
+	log.Debug().Stringer("OpenOrdersEndProto", openOrdersEndProto).Msg("<OpenOrdersEndProtoBuf>")
+}
+
+func (w WrapperSync) ErrorProtoBuf(errorProto *protobuf.ErrorMessage) {
+	log.Debug().Stringer("ErrorProto", errorProto).Msg("<ErrorProtoBuf>")
 }

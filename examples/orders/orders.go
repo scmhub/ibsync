@@ -178,7 +178,9 @@ func main() {
 	fmt.Println("*** Global cancel ***")
 	ib.ReqGlobalCancel()
 	<-buyTrade4.Done()
+	fmt.Println("*** status of trade 4:", buyTrade4.OrderStatus.Status)
 	<-buyTrade5.Done()
+	fmt.Println("*** status of trade 5:", buyTrade5.OrderStatus.Status)
 
 	// Print Trades after global cancel
 	time.Sleep(1 * time.Second)

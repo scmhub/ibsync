@@ -20,6 +20,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -140,43 +141,43 @@ func main() {
 	executions := ib.Executions()
 	fmt.Println("executions", executions)
 
-	// // User info
-	// whiteBrandingId, _ := ib.ReqUserInfo()
-	// fmt.Println("whiteBrandingId", whiteBrandingId)
+	// User info
+	whiteBrandingId, _ := ib.ReqUserInfo()
+	fmt.Println("whiteBrandingId", whiteBrandingId)
 
-	// // News bulletins Channel
-	// nbChan := ib.NewsBulletinsChan()
-	// ctx, cancel := context.WithCancel(ib.Context())
-	// defer cancel()
-	// go func() {
-	// 	var i int
-	// 	for {
-	// 		select {
-	// 		case <-ctx.Done():
-	// 			return
-	// 		case bulletin, ok := <-nbChan:
-	// 			if !ok {
-	// 				return
-	// 			}
-	// 			fmt.Printf("News bulletin from channel %v: %v\n", i, bulletin)
-	// 			i++
-	// 		}
-	// 	}
-	// }()
+	// News bulletins Channel
+	nbChan := ib.NewsBulletinsChan()
+	ctx, cancel := context.WithCancel(ib.Context())
+	defer cancel()
+	go func() {
+		var i int
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case bulletin, ok := <-nbChan:
+				if !ok {
+					return
+				}
+				fmt.Printf("News bulletin from channel %v: %v\n", i, bulletin)
+				i++
+			}
+		}
+	}()
 
-	// // Request news bulletins
-	// ib.ReqNewsBulletins(true)
+	// Request news bulletins
+	ib.ReqNewsBulletins(true)
 
-	// // Wait for bulletins
-	// time.Sleep(10 * time.Second)
+	// Wait for bulletins
+	time.Sleep(10 * time.Second)
 
-	// // Recorded bulletins
-	// bulletins := ib.NewsBulletins()
+	// Recorded bulletins
+	bulletins := ib.NewsBulletins()
 
-	// for i, bulletin := range bulletins {
-	// 	fmt.Printf("News bulletin %v: %v\n", i, bulletin)
-	// }
-	// ib.CancelNewsBulletins()
+	for i, bulletin := range bulletins {
+		fmt.Printf("News bulletin %v: %v\n", i, bulletin)
+	}
+	ib.CancelNewsBulletins()
 
 	time.Sleep(1 * time.Second)
 	log.Info().Msg("Good Bye!!!")
