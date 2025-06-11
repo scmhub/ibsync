@@ -182,8 +182,19 @@ func TestConnection(t *testing.T) {
 	}
 	if testing.Verbose() {
 		for i, p := range portfolio {
-			t.Logf("Portfolio %v: %v\n", i, p)
+			t.Logf("Portfolio item %v: %v\n", i, p)
 		}
+	}
+	// Orders
+	orders := ib.Orders()
+	for i, order := range orders {
+		t.Logf("Order %v: %v\n", i, order)
+	}
+
+	// OpenOrders
+	openOrders := ib.OpenOrders()
+	for i, openOrder := range openOrders {
+		t.Logf("Open order %v: %v\n", i, openOrder)
 	}
 
 	// TWS connection time

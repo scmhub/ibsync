@@ -864,3 +864,15 @@ func (w WrapperSync) OpenOrdersEndProtoBuf(openOrdersEndProto *protobuf.OpenOrde
 func (w WrapperSync) ErrorProtoBuf(errorProto *protobuf.ErrorMessage) {
 	log.Debug().Stringer("ErrorProto", errorProto).Msg("<ErrorProtoBuf>")
 }
+
+func (w WrapperSync) CompletedOrderProtoBuf(completedOrderProto *protobuf.CompletedOrder) {
+	log.Debug().Stringer("completedOrderProto", completedOrderProto).Msg("<completedOrderProtoBuf>")
+}
+
+func (w WrapperSync) CompletedOrdersEndProtoBuf(completedOrdersEndProto *protobuf.CompletedOrdersEnd) {
+	log.Debug().Stringer("completedOrdersEndProto", completedOrdersEndProto).Msg("<completedOrdersEndProtoBuf>")
+}
+
+func (w WrapperSync) OrderBoundProtoBuf(orderBoundProto *protobuf.OrderBound) {
+	log.Debug().Stringer("orderBoundProto", orderBoundProto).Msg("<orderBoundProtoBuf>")
+}
