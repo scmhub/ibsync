@@ -792,7 +792,7 @@ func TestNewsBulletins(t *testing.T) {
 	ib := getIB()
 
 	nbChan := ib.NewsBulletinsChan()
-	ctx, cancel := context.WithCancel(ib.eClient.Ctx)
+	ctx, cancel := context.WithCancel(ib.eClient.Ctx())
 	defer cancel()
 	go func() {
 		var i int

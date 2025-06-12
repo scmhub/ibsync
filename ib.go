@@ -158,7 +158,7 @@ func (ib *IB) IsConnected() bool {
 
 // Context returns the ibsync Context
 func (ib *IB) Context() context.Context {
-	return ib.eClient.Ctx
+	return ib.eClient.Ctx()
 }
 
 // SetTimeout sets the timeout for receiving messages from TWS/IBG.
@@ -171,7 +171,7 @@ func (ib *IB) SetTimeout(Timeout time.Duration) {
 func (ib *IB) ManagedAccounts() []string {
 	ib.state.mu.Lock()
 	defer ib.state.mu.Unlock()
-	return append(ib.state.accounts[:0:0], ib.state.accounts...)
+	return slices.Clone(ib.state.accounts)
 }
 
 // IsPaperAccount checks if the accounts are paper accounts
@@ -296,7 +296,7 @@ func (ib *IB) Positions(account ...string) []Position {
 // You need to subscribe to positions by calling ReqPositions.
 // Do NOT close the channel.
 func (ib *IB) PositionChan(account ...string) chan Position {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 	positionChan := make(chan Position)
 	ch, unsubscribe := ib.pubSub.Subscribe("Position")
 	var once sync.Once
@@ -378,7 +378,7 @@ func (ib *IB) Pnl(account string, modelCode string) []Pnl {
 //
 // Do NOT close the channel.
 func (ib *IB) PnlChan(account string, modelCode string) chan Pnl {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 	pnlChan := make(chan Pnl)
 	ch, unsubscribe := ib.pubSub.Subscribe("Pnl")
 	var once sync.Once
@@ -459,7 +459,7 @@ func (ib *IB) PnlSingle(account string, modelCode string, contractID int64) []Pn
 //
 // Do NOT close the channel.
 func (ib *IB) PnlSingleChan(account string, modelCode string, contractID int64) chan PnlSingle {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 	pnlSingleChan := make(chan PnlSingle)
 	ch, unsubscribe := ib.pubSub.Subscribe("PnlSingle")
 	var once sync.Once
@@ -560,13 +560,13 @@ func (ib *IB) Tickers() []*Ticker {
 func (ib *IB) NewsTick() []NewsTick {
 	ib.state.mu.Lock()
 	defer ib.state.mu.Unlock()
-	return append(ib.state.newsTicks[:0:0], ib.state.newsTicks...)
+	return slices.Clone(ib.state.newsTicks)
 }
 
 // ReqCurrentTime asks the current system time on the server side.
 // A second call within a secund will not be answered.
 func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("CurrentTime")
@@ -587,7 +587,7 @@ func (ib *IB) ReqCurrentTime() (currentTime time.Time, err error) {
 // ReqCurrentTime asks the current system time on the server side.
 // A second call within a secund will not be answered.
 func (ib *IB) ReqCurrentTimeInMillis() (int64, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("CurrentTimeInMillis")
@@ -675,7 +675,7 @@ func (ib *IB) CancelMktData(contract *Contract) {
 // contract contains a description of the Contract for which market data is being requested.
 // regulatorySnapshot: With the US Value Snapshot Bundle for stocks, regulatory snapshots are available for 0.01 USD each.
 func (ib *IB) Snapshot(contract *Contract, regulatorySnapshot ...bool) (*Ticker, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -745,7 +745,7 @@ func (ib *IB) ReqMarketDataType(marketDataType int64) {
 // SmartComponents provide mapping from single letter codes to exchange names.
 // Note: The exchanges must be open when using this request, otherwise an empty list is returned.
 func (ib *IB) ReqSmartComponents(bboExchange string) ([]SmartComponent, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -774,7 +774,7 @@ func (ib *IB) ReqSmartComponents(bboExchange string) ([]SmartComponent, error) {
 //
 // Note: market rule ids can be obtained by invoking reqContractDetails on a particular contract
 func (ib *IB) ReqMarketRule(marketRuleID int64) ([]PriceIncrement, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	topic := Key("MarketRule", marketRuleID)
@@ -836,7 +836,7 @@ func (ib *IB) CancelTickByTickData(contract *Contract, tickType string) error {
 //
 // No more than one request can be made for the same instrument within 15 seconds.
 func (ib *IB) MidPoint(contract *Contract) (TickByTickMidPoint, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -864,7 +864,7 @@ func (ib *IB) MidPoint(contract *Contract) (TickByTickMidPoint, error) {
 
 // CalculateImpliedVolatility calculates the implied volatility given the option price.
 func (ib *IB) CalculateImpliedVolatility(contract *Contract, optionPrice float64, underPrice float64, impVolOptions ...TagValue) (*TickOptionComputation, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -899,7 +899,7 @@ func (ib *IB) CalculateImpliedVolatility(contract *Contract, optionPrice float64
 
 // CalculateOptionPrice calculates the price of the option given the volatility.
 func (ib *IB) CalculateOptionPrice(contract *Contract, volatility float64, underPrice float64, optPrcOptions ...TagValue) (*TickOptionComputation, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -993,7 +993,7 @@ func (ib *IB) ReqGlobalCancel() {
 func (ib *IB) ReqOpenOrders() error {
 	log.Debug().Msg("<ReqOpenOrders>")
 
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("OpenOrdersEnd")
@@ -1025,7 +1025,7 @@ func (ib *IB) ReqAutoOpenOrders(autoBind bool) {
 func (ib *IB) ReqAllOpenOrders() error {
 	log.Debug().Msg("<ReqAllOpenOrders>")
 
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("OpenOrdersEnd")
@@ -1046,7 +1046,7 @@ func (ib *IB) ReqAllOpenOrders() error {
 func (ib *IB) ReqAccountUpdates(subscribe bool, accountName string) error {
 	log.Debug().Msg("<ReqAccountUpdates>")
 
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("AccountDownloadEnd")
@@ -1112,7 +1112,7 @@ func (ib *IB) ReqAccountUpdates(subscribe bool, accountName string) error {
 //	$LEDGER:CURRENCY - Single flag to relay all cash balance tags*, only in	the specified currency.
 //	$LEDGER:ALL - Single flag to relay all cash balance tags* in all currencies.
 func (ib *IB) ReqAccountSummary(groupName string, tags string) (AccountSummary, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1190,7 +1190,7 @@ func (ib *IB) Executions(execFilter ...*ExecutionFilter) []Execution {
 // execFilter contains attributes that describe the filter criteria used to determine which execution reports are returned
 // NOTE: Time format must be 'yyyymmdd-hh:mm:ss' Eg: '20030702-14:55'
 func (ib *IB) ReqExecutions(execFilter ...*ExecutionFilter) ([]Execution, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1242,7 +1242,7 @@ func (ib *IB) Fills(execFilter ...*ExecutionFilter) []Fill {
 }
 
 func (ib *IB) ReqFills(execFilter ...*ExecutionFilter) ([]Fill, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1279,7 +1279,7 @@ func (ib *IB) ReqFills(execFilter ...*ExecutionFilter) ([]Fill, error) {
 // If the returned list is empty then the contract is not known.
 // If the list has multiple values then the contract is ambiguous.
 func (ib *IB) ReqContractDetails(contract *Contract) ([]ContractDetails, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1372,7 +1372,7 @@ func (ib *IB) QualifyContract(contracts ...*Contract) error {
 
 // ReqMktDepthExchanges requests market depth exchanges.
 func (ib *IB) ReqMktDepthExchanges() ([]DepthMktDataDescription, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("MktDepthExchanges")
@@ -1403,7 +1403,7 @@ func (ib *IB) ReqMktDepthExchanges() ([]DepthMktDataDescription, error) {
 // isSmartDepth	if true consolidates order book across exchanges.
 // mktDepthOptions is for internal use only. Use default value XYZ.
 func (ib *IB) ReqMktDepth(contract *Contract, numRows int, isSmartDepth bool, mktDepthOptions ...TagValue) (*Ticker, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1486,7 +1486,7 @@ func (ib *IB) NewsBulletins() []NewsBulletin {
 //
 // Do not close the channel.
 func (ib *IB) NewsBulletinsChan() chan NewsBulletin {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 	nbChan := make(chan NewsBulletin)
 	ch, unsubscribe := ib.pubSub.Subscribe("NewsBulletin")
 	var once sync.Once
@@ -1520,7 +1520,7 @@ func (ib *IB) RequestFA(faDataType FaDataType) (cxml string, err error) {
 	if !ib.IsFinancialAdvisorAccount() {
 		return "", ErrNotFinancialAdvisor
 	}
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("ReceiveFA")
@@ -1550,7 +1550,7 @@ func (ib *IB) ReplaceFA(faDataType FaDataType, cxml string) (string, error) {
 	if !ib.IsFinancialAdvisorAccount() {
 		return "", ErrNotFinancialAdvisor
 	}
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1643,7 +1643,7 @@ func (ib *IB) ReqHistoricalDataUpToDate(contract *Contract, duration string, bar
 }
 
 func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration string, barSize string, whatToShow string, useRTH bool, formatDate int, keepUpToDate bool, chartOptions ...TagValue) (chan Bar, CancelFunc) {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 
 	reqID := ib.NextID()
 
@@ -1721,7 +1721,7 @@ func (ib *IB) reqHistoricalData(contract *Contract, endDateTime string, duration
 
 // ReqHistoricalSchedule requests historical schedule.
 func (ib *IB) ReqHistoricalSchedule(contract *Contract, endDateTime string, duration string, useRTH bool) (HistoricalSchedule, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1755,7 +1755,7 @@ func (ib *IB) ReqHistoricalSchedule(contract *Contract, endDateTime string, dura
 //   - useRTH: When true, queries only Regular Trading Hours data
 //   - formatDate: Determines the format of returned dates (1: utc, 2: local)
 func (ib *IB) ReqHeadTimeStamp(contract *Contract, whatToShow string, useRTH bool, formatDate int) (time.Time, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1788,7 +1788,7 @@ func (ib *IB) ReqHeadTimeStamp(contract *Contract, whatToShow string, useRTH boo
 // useRTH: If True then only show data from within Regular	Trading Hours, if False then show all data.
 // period: Period of which data is being requested, for example "3 days".
 func (ib *IB) ReqHistogramData(contract *Contract, useRTH bool, timePeriod string) ([]HistogramData, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1825,7 +1825,7 @@ func (ib *IB) ReqHistogramData(contract *Contract, useRTH bool, timePeriod strin
 // ignoreSize: Ignore bid/ask ticks that only update the size.
 // miscOptions: Unknown.
 func (ib *IB) ReqHistoricalTicks(contract *Contract, startDateTime, endDateTime time.Time, numberOfTicks int, useRTH bool, ignoreSize bool, miscOptions ...TagValue) ([]HistoricalTick, error, bool) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1868,7 +1868,7 @@ func (ib *IB) ReqHistoricalTicks(contract *Contract, startDateTime, endDateTime 
 // ignoreSize: Ignore bid/ask ticks that only update the size.
 // miscOptions: Unknown.
 func (ib *IB) ReqHistoricalTickLast(contract *Contract, startDateTime, endDateTime time.Time, numberOfTicks int, useRTH bool, ignoreSize bool, miscOptions ...TagValue) ([]HistoricalTickLast, error, bool) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1911,7 +1911,7 @@ func (ib *IB) ReqHistoricalTickLast(contract *Contract, startDateTime, endDateTi
 // ignoreSize: Ignore bid/ask ticks that only update the size.
 // miscOptions: Unknown.
 func (ib *IB) ReqHistoricalTickBidAsk(contract *Contract, startDateTime, endDateTime time.Time, numberOfTicks int, useRTH bool, ignoreSize bool, miscOptions ...TagValue) ([]HistoricalTickBidAsk, error, bool) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -1945,7 +1945,7 @@ func (ib *IB) ReqHistoricalTickBidAsk(contract *Contract, startDateTime, endDate
 
 // ReqScannerParameters requests an XML string that describes all possible scanner queries.
 func (ib *IB) ReqScannerParameters() (xml string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("ScannerParameters")
@@ -1970,7 +1970,7 @@ type ScannerSubscriptionOptions struct {
 // scannerSubscription contains possible parameters used to filter results.
 // scannerSubscriptionOptions, scannerSubscriptionOptions is for internal use only.Use default value XYZ.
 func (ib *IB) ReqScannerSubscription(subscription *ScannerSubscription, scannerSubscriptionOptions ...ScannerSubscriptionOptions) ([]ScanData, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2035,7 +2035,7 @@ func (ib *IB) ReqScannerSubscription(subscription *ScannerSubscription, scannerS
 //
 // realTimeBarOptions is for internal use only. Use default value XYZ.
 func (ib *IB) ReqRealTimeBars(contract *Contract, barSize int, whatToShow string, useRTH bool, realTimeBarsOptions ...TagValue) (chan RealTimeBar, CancelFunc) {
-	ctx := ib.eClient.Ctx
+	ctx := ib.eClient.Ctx()
 
 	reqID := ib.NextID()
 
@@ -2110,7 +2110,7 @@ func (ib *IB) ReqRealTimeBars(contract *Contract, barSize int, whatToShow string
 //	RESC (analyst estimates)
 //	CalendarReport (company calendar)
 func (ib *IB) ReqFundamentalData(contract *Contract, reportType string, fundamentalDataOptions ...TagValue) (data string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2133,7 +2133,7 @@ func (ib *IB) ReqFundamentalData(contract *Contract, reportType string, fundamen
 
 // ReqNewsProviders requests a slice of news providers.
 func (ib *IB) ReqNewsProviders() ([]NewsProvider, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("NewsProvider")
@@ -2157,7 +2157,7 @@ func (ib *IB) ReqNewsProviders() ([]NewsProvider, error) {
 // providerCode: Code indicating news provider, like 'BZ' or 'FLY'.
 // articleId: ID of the specific article. You can get it from ReqHistoricalNews
 func (ib *IB) ReqNewsArticle(providerCode string, articleID string, newsArticleOptions ...TagValue) (*NewsArticle, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2189,7 +2189,7 @@ func (ib *IB) ReqNewsArticle(providerCode string, articleID string, newsArticleO
 // totalResults: Maximum number of headlines to fetch (300 max).
 // historicalNewsOptions: Unknown.
 func (ib *IB) ReqHistoricalNews(contractID int64, providerCode string, startDateTime time.Time, endDateTime time.Time, totalResults int64, historicalNewsOptions ...TagValue) ([]HistoricalNews, error, bool) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2232,7 +2232,7 @@ func (ib *IB) ReqHistoricalNews(contractID int64, providerCode string, startDate
 
 // QueryDisplayGroups requests the display groups in TWS.
 func (ib *IB) QueryDisplayGroups() (groups string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2308,7 +2308,7 @@ func (ib *IB) UnsubscribeFromGroupEvents(reqID int64) {
 // underlyingSecType is the type of the underlying security, i.e. STK.
 // underlyingConId is the contract ID of the underlying security.
 func (ib *IB) ReqSecDefOptParams(underlyingSymbol string, futFopExchange string, underlyingSecurityType string, underlyingContractID int64) ([]OptionChain, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2342,7 +2342,7 @@ func (ib *IB) ReqSecDefOptParams(underlyingSymbol string, futFopExchange string,
 // This is only supported for registered professional advisors and hedge and mutual funds
 // who have configured Soft Dollar Tiers in Account Management.
 func (ib *IB) ReqSoftDollarTiers() ([]SoftDollarTier, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2366,7 +2366,7 @@ func (ib *IB) ReqSoftDollarTiers() ([]SoftDollarTier, error) {
 
 // ReqFamilyCodes requests family codes.
 func (ib *IB) ReqFamilyCodes() ([]FamilyCode, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	ch, unsubscribe := ib.pubSub.Subscribe("FamilyCodes")
@@ -2388,7 +2388,7 @@ func (ib *IB) ReqFamilyCodes() ([]FamilyCode, error) {
 
 // ReqMatchingSymbols requests matching symbols.
 func (ib *IB) ReqMatchingSymbols(pattern string) ([]ContractDescription, error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2415,7 +2415,7 @@ func (ib *IB) ReqMatchingSymbols(pattern string) ([]ContractDescription, error) 
 func (ib *IB) ReqCompletedOrders(apiOnly bool) error {
 	log.Debug().Bool("apiOnly", apiOnly).Msg("<ReqCompletedOrders>")
 
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	completedOrdersChan, unsubscribe := ib.pubSub.Subscribe("CompletedOrdersEnd")
@@ -2434,7 +2434,7 @@ func (ib *IB) ReqCompletedOrders(apiOnly bool) error {
 
 // ReqWshMetaData requests Wall Street Horizon Meta data
 func (ib *IB) ReqWshMetaData() (dataJson string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2458,7 +2458,7 @@ func (ib *IB) ReqWshMetaData() (dataJson string, err error) {
 
 // ReqWshEventData requests Wall Street Horizon event data.
 func (ib *IB) ReqWshEventData(wshEventData WshEventData) (dataJson string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
@@ -2482,7 +2482,7 @@ func (ib *IB) ReqWshEventData(wshEventData WshEventData) (dataJson string, err e
 
 // ReqUserInfo returns user white branding info with timeout and error handling.
 func (ib *IB) ReqUserInfo() (whiteBrandingId string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx, ib.config.Timeout)
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
 	defer cancel()
 
 	reqID := ib.NextID()
