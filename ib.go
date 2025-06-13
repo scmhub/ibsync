@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/scmhub/ibapi"
 )
 
@@ -51,6 +52,10 @@ func NewIB(config ...*Config) *IB {
 	}
 
 	return ib
+}
+
+func (ib *IB) SetLogger(logger zerolog.Logger) {
+	SetLogger(logger)
 }
 
 // SetClientLogLevel sets the log level of the client.

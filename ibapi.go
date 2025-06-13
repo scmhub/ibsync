@@ -25,6 +25,7 @@ var (
 	FloatMaxString   = ibapi.FloatMaxString
 	DecimalMaxString = ibapi.DecimalMaxString
 	Logger           = ibapi.Logger
+	SetLogger        = ibapi.SetLogger
 	SetLogLevel      = ibapi.SetLogLevel
 	SetConsoleWriter = ibapi.SetConsoleWriter
 	TickName         = ibapi.TickName
