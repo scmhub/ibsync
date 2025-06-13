@@ -997,6 +997,7 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 				}
 				trade.addLogSafe(logEntry)
 				trade.markDoneSafe()
+				return
 			}
 		}
 	}(order.OrderID, trade)
