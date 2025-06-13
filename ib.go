@@ -975,6 +975,32 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 		ib.state.trades[key] = trade
 		log.Debug().Int64("orderID", order.OrderID).Str("message", "open order").Msg("<PlaceOrder>")
 	}
+
+	// Listen to errors and updates the trade
+	go func(orderID int64, trade *Trade) {
+		ch, unsubscribe := ib.pubSub.Subscribe(orderID)
+		defer unsubscribe()
+		for {
+			select {
+			case <-trade.Done():
+				return
+			case msg := <-ch:
+				if !isErrorMsg(msg) {
+					continue
+				}
+				err := msg2Error(msg)
+				logEntry := TradeLogEntry{
+					Time:      time.Now().UTC(),
+					Status:    Rejected,
+					Message:   err.Msg,
+					ErrorCode: err.Code,
+				}
+				trade.addLogSafe(logEntry)
+				trade.markDoneSafe()
+			}
+		}
+	}(order.OrderID, trade)
+
 	return trade
 }
 

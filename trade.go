@@ -20,6 +20,7 @@ const (
 	Cancelled     Status = "Cancelled"     // Order has been cancelled
 	Filled        Status = "Filled"        // Order has been completely filled
 	Inactive      Status = "Inactive"      // Order is inactive
+	Rejected      Status = " Rejected"     // Order was rejected by IB
 )
 
 // IsActive returns true if the status indicates the order is still active in the market.
@@ -235,6 +236,12 @@ func (t *Trade) Logs() []TradeLogEntry {
 // addLog adds a new log entry to the trade's history
 func (t *Trade) addLog(tradeLogEntry TradeLogEntry) {
 	t.logs = append(t.logs, tradeLogEntry)
+}
+
+func (t *Trade) addLogSafe(tradeLogEntry TradeLogEntry) {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	t.addLog(tradeLogEntry)
 }
 
 func (t *Trade) Equal(other *Trade) bool {
