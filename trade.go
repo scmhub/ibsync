@@ -11,16 +11,15 @@ type Status string
 
 // Order status constants define all possible states an order can be in.
 const (
-	PendingSubmit Status = "PendingSubmit" // Order is pending submission to IB
-	PendingCancel Status = "PendingCancel" // Order cancellation is pending
-	PreSubmitted  Status = "PreSubmitted"  // Order has been sent but not yet confirmed
-	Submitted     Status = "Submitted"     // Order has been submitted to IB
+	PendingSubmit Status = "PendingSubmit" // indicates that you have transmitted the order, but have not yet received confirmation that it has been accepted by the order destination.
+	PendingCancel Status = "PendingCancel" // PendingCancel	indicates that you have sent a request to cancel the order but have not yet received cancel confirmation from the order destination. At this point, your order is not confirmed canceled. It is not guaranteed that the cancellation will be successful.
+	PreSubmitted  Status = "PreSubmitted"  // indicates that a simulated order type has been accepted by the IB system and that this order has yet to be elected. The order is held in the IB system until the election criteria are met. At that time the order is transmitted to the order destination as specified.
+	Submitted     Status = "Submitted"     // indicates that your order has been accepted by the system.
 	ApiPending    Status = "ApiPending"    // Order is pending processing by the API
-	ApiCancelled  Status = "ApiCancelled"  // Order was cancelled through the API
-	Cancelled     Status = "Cancelled"     // Order has been cancelled
-	Filled        Status = "Filled"        // Order has been completely filled
-	Inactive      Status = "Inactive"      // Order is inactive
-	Rejected      Status = " Rejected"     // Order was rejected by IB
+	ApiCancelled  Status = "ApiCancelled"  // after an order has been submitted and before it has been acknowledged, an API client client can request its cancelation, producing this state.
+	Cancelled     Status = "Cancelled"     // indicates that the balance of your order has been confirmed canceled by the IB system. This could occur unexpectedly when IB or the destination has rejected your order.
+	Filled        Status = "Filled"        // 	indicates that the order has been completely filled. Market orders executions will not always trigger a Filled status.
+	Inactive      Status = "Inactive"      // indicates that the order was received by the system but is no longer active because it was rejected or canceled.
 )
 
 // IsActive returns true if the status indicates the order is still active in the market.

@@ -989,15 +989,25 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 					continue
 				}
 				err := msg2Error(msg)
-				logEntry := TradeLogEntry{
-					Time:      time.Now().UTC(),
-					Status:    Rejected,
-					Message:   err.Msg,
-					ErrorCode: err.Code,
+				if err.Code == 200 || err.Code == 201 {
+					logEntry := TradeLogEntry{
+						Time:      time.Now().UTC(),
+						Status:    Inactive,
+						Message:   err.Msg,
+						ErrorCode: err.Code,
+					}
+					trade.addLogSafe(logEntry)
+					trade.markDoneSafe() // Trade is marked as done if the error is 200 or 201 only.
+					return
+				} else {
+					logEntry := TradeLogEntry{
+						Time:      time.Now().UTC(),
+						Status:    trade.OrderStatus.Status,
+						Message:   err.Msg,
+						ErrorCode: err.Code,
+					}
+					trade.addLogSafe(logEntry)
 				}
-				trade.addLogSafe(logEntry)
-				trade.markDoneSafe()
-				return
 			}
 		}
 	}(order.OrderID, trade)
