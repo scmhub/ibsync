@@ -876,3 +876,15 @@ func (w WrapperSync) CompletedOrdersEndProtoBuf(completedOrdersEndProto *protobu
 func (w WrapperSync) OrderBoundProtoBuf(orderBoundProto *protobuf.OrderBound) {
 	log.Debug().Stringer("orderBoundProto", orderBoundProto).Msg("<orderBoundProtoBuf>")
 }
+
+func (w WrapperSync) ContractDataProtoBuf(contractDataProto *protobuf.ContractData) {
+	log.Debug().Stringer("contractDataProto", contractDataProto).Msg("<ContractDataProtoBuf>")
+}
+
+func (w WrapperSync) BondContractDataProtoBuf(contractDataProto *protobuf.ContractData) {
+	log.Debug().Stringer("contractDataProto", contractDataProto).Msg("<BondContractDataProtoBuf>")
+}
+
+func (w WrapperSync) ContractDataEndProtoBuf(contractDataEndProto *protobuf.ContractDataEnd) {
+	log.Debug().Stringer("contractDataEndProto", contractDataEndProto).Msg("<ContractDataEndProtoBuf>")
+}

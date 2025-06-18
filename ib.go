@@ -966,14 +966,14 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 			Message: "Modify",
 		}
 		trade.addLog(logEntry)
-		log.Debug().Int64("orderID", order.OrderID).Str("message", "modify order").Msg("<PlaceOrder>")
+		log.Debug().Int64("orderID", order.OrderID).Bool("new order", false).Msg("<PlaceOrder>")
 	} else {
 		// new order
 		order.ClientID = ib.config.ClientID
 		trade = NewTrade(contract, order)
 		key = orderKey(order.ClientID, order.OrderID, order.PermID) // clientID is updated
 		ib.state.trades[key] = trade
-		log.Debug().Int64("orderID", order.OrderID).Str("message", "open order").Msg("<PlaceOrder>")
+		log.Debug().Int64("orderID", order.OrderID).Bool("new order", true).Msg("<PlaceOrder>")
 	}
 
 	// Listen to errors and updates the trade

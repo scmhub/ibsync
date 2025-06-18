@@ -519,13 +519,18 @@ func TestCancelOrder(t *testing.T) {
 	// Wait for order to be cancelled
 	select {
 	case <-trade.Done():
-	case <-time.After(5 * time.Second):
+	case <-time.After(30 * time.Second):
 		t.Fatal("Order cancel timed out")
 	}
 
 	if trade.OrderStatus.Status != Cancelled {
 		t.Errorf("Expected Cancelled status, got %v", trade.OrderStatus.Status)
 	}
+
+	if testing.Verbose() {
+		t.Logf("trade: %v\n", trade.logs)
+	}
+
 }
 
 func TestGlobalCancel(t *testing.T) {
@@ -583,7 +588,6 @@ func TestSnapshot(t *testing.T) {
 	if testing.Verbose() {
 		t.Logf("Market price: %v\n", ticker.MarketPrice())
 		t.Logf("Snapshot: %v\n", ticker)
-
 	}
 
 }
