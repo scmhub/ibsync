@@ -27,6 +27,11 @@ func main() {
 	}
 	defer ib.Disconnect()
 
+	if !ib.IsPaperAccount() {
+		log.Warn().Msg("Tests must run on a paper trading accoun")
+		return
+	}
+
 	// CPAY
 	// cpay := ibsync.NewStock("CPAY", "NASDAQ", "USD")
 	// order := ibsync.MarketOrder("BUY", ibsync.StringToDecimal("100"))
