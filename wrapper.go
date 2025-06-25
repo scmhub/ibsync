@@ -331,11 +331,12 @@ func (w *WrapperSync) updateMktDepth(TickerID TickerID, position int64, marketMa
 
 	// side: 0 = ask, 1 = bid
 	var dom map[int64]DOMLevel
-	if side == 0 {
+	switch side {
+	case 0:
 		dom = ticker.domAsks
-	} else if side == 1 {
+	case 1:
 		dom = ticker.domBids
-	} else {
+	default:
 		log.Error().Err(errors.New("unknown DOM side")).Msg("updateMktDepth")
 		return
 	}

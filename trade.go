@@ -112,6 +112,11 @@ func (f *Fill) Matches(filter *ExecutionFilter) bool {
 	return true
 }
 
+func (f *Fill) String() string {
+	return fmt.Sprintf("Fill{Contract: %v, Execution: %v, CommissionAndFeesReport: %v, Time: %v}",
+		f.Contract, f.Execution, f.CommissionAndFeesReport, f.Time)
+}
+
 // TradeLogEntry represents a single entry in the trade's log, recording status changes
 // and other significant events.
 type TradeLogEntry struct {
@@ -251,6 +256,6 @@ func (t *Trade) String() string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	return fmt.Sprintf("Trade{Contract: %v, Order: %v, Status: %v, Fills: %d}",
-		t.Contract, t.Order, t.OrderStatus, len(t.fills))
+	return fmt.Sprintf("Trade{Contract: %v, Order: %v, Status: %v, Fills: %v}",
+		t.Contract, t.Order, t.OrderStatus, t.fills)
 }
