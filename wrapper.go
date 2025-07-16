@@ -891,41 +891,93 @@ func (w WrapperSync) ContractDataEndProtoBuf(contractDataEndProto *protobuf.Cont
 }
 
 func (w WrapperSync) TickPriceProtoBuf(tickPriceProto *protobuf.TickPrice) {
-	log.Debug().Stringer("tickPriceProto", tickPriceProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickPriceProto", tickPriceProto).Msg("<TickPriceProtoBuf>")
 }
 
 func (w WrapperSync) TickSizeProtoBuf(tickSizeProto *protobuf.TickSize) {
-	log.Debug().Stringer("tickSizeProto", tickSizeProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickSizeProto", tickSizeProto).Msg("<TickSizeProtoBuf>")
 }
 
 func (w WrapperSync) TickOptionComputationProtoBuf(tickOptionComputationProto *protobuf.TickOptionComputation) {
-	log.Debug().Stringer("tickOptionComputationProto", tickOptionComputationProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickOptionComputationProto", tickOptionComputationProto).Msg("<TickOptionComputationProtoBuf>")
 }
 
 func (w WrapperSync) TickGenericProtoBuf(tickGenericProto *protobuf.TickGeneric) {
-	log.Debug().Stringer("tickGenericProto", tickGenericProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickGenericProto", tickGenericProto).Msg("<TickGenericProtoBuf>")
 }
 
 func (w WrapperSync) TickStringProtoBuf(tickStringProto *protobuf.TickString) {
-	log.Debug().Stringer("tickStringProto", tickStringProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickStringProto", tickStringProto).Msg("<TickStringProtoBuf>")
 }
 
 func (w WrapperSync) TickSnapshotEndProtoBuf(tickSnapshotEndProto *protobuf.TickSnapshotEnd) {
-	log.Debug().Stringer("tickSnapshotEndProto", tickSnapshotEndProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickSnapshotEndProto", tickSnapshotEndProto).Msg("<TickSnapshotEndProtoBuf>")
 }
 
 func (w WrapperSync) UpdateMarketDepthProtoBuf(marketDepthProto *protobuf.MarketDepth) {
-	log.Debug().Stringer("marketDepthProto", marketDepthProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("marketDepthProto", marketDepthProto).Msg("<UpdateMarketDepthProtoBuf>")
 }
 
 func (w WrapperSync) UpdateMarketDepthL2ProtoBuf(marketDepthL2Proto *protobuf.MarketDepthL2) {
-	log.Debug().Stringer("marketDepthL2Proto", marketDepthL2Proto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("marketDepthL2Proto", marketDepthL2Proto).Msg("<UpdateMarketDepthL2ProtoBuf>")
 }
 
 func (w WrapperSync) MarketDataTypeProtoBuf(marketDataTypeProto *protobuf.MarketDataType) {
-	log.Debug().Stringer("marketDataTypeProto", marketDataTypeProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("marketDataTypeProto", marketDataTypeProto).Msg("<MarketDataTypeProtoBuf>")
 }
 
 func (w WrapperSync) TickReqParamsProtoBuf(tickReqParamsProto *protobuf.TickReqParams) {
-	log.Debug().Stringer("tickReqParamsProto", tickReqParamsProto).Msg("<ContractDataEndProtoBuf>")
+	log.Debug().Stringer("tickReqParamsProto", tickReqParamsProto).Msg("<TickReqParamsProtoBuf>")
+}
+
+func (w WrapperSync) UpdateAccountValueProtoBuf(accountValueProto *protobuf.AccountValue) {
+	log.Debug().Stringer("accountValueProto", accountValueProto).Msg("<UpdateAccountValueProtoBuf>")
+}
+
+func (w WrapperSync) UpdatePortfolioProtoBuf(portfolioValueProto *protobuf.PortfolioValue) {
+	log.Debug().Stringer("portfolioValueProto", portfolioValueProto).Msg("<UpdatePortfolioProtoBuf>")
+}
+
+func (w WrapperSync) UpdateAccountTimeProtoBuf(accountUpdateTimeProto *protobuf.AccountUpdateTime) {
+	log.Debug().Stringer("accountUpdateTimeProto", accountUpdateTimeProto).Msg("<UpdateAccountTimeProtoBuf>")
+}
+
+func (w WrapperSync) AccountDataEndProtoBuf(accountDataEndProto *protobuf.AccountDataEnd) {
+	log.Debug().Stringer("accountDataEndProto", accountDataEndProto).Msg("<AccountDataEndProtoBuf>")
+}
+
+func (w WrapperSync) ManagedAccountsProtoBuf(managedAccountsProto *protobuf.ManagedAccounts) {
+	log.Debug().Stringer("managedAccountsProto", managedAccountsProto).Msg("<ManagedAccountsProtoBuf>")
+}
+
+func (w WrapperSync) PositionProtoBuf(positionProto *protobuf.Position) {
+	log.Debug().Stringer("positionProto", positionProto).Msg("<PositionProtoBuf>")
+}
+
+func (w WrapperSync) PositionEndProtoBuf(positionEndProto *protobuf.PositionEnd) {
+	log.Debug().Stringer("positionEndProto", positionEndProto).Msg("<PositionEndProtoBuf>")
+}
+
+func (w WrapperSync) AccountSummaryProtoBuf(accountSummaryProto *protobuf.AccountSummary) {
+	log.Debug().Stringer("accountSummaryProto", accountSummaryProto).Msg("<AccountSummaryProtoBuf>")
+}
+
+func (w WrapperSync) AccountSummaryEndProtoBuf(accountSummaryEndProto *protobuf.AccountSummaryEnd) {
+	log.Debug().Stringer("accountSummaryEndProto", accountSummaryEndProto).Msg("<AccountSummaryEndProtoBuf>")
+}
+
+func (w WrapperSync) PositionMultiProtoBuf(positionMultiProto *protobuf.PositionMulti) {
+	log.Debug().Stringer("positionMultiProto", positionMultiProto).Msg("<PositionMultiProtoBuf>")
+}
+
+func (w WrapperSync) PositionMultiEndProtoBuf(positionMultiEndProto *protobuf.PositionMultiEnd) {
+	log.Debug().Stringer("positionMultiEndProto", positionMultiEndProto).Msg("<PositionMultiEndProtoBuf>")
+}
+
+func (w WrapperSync) AccountUpdateMultiProtoBuf(accountUpdateMultiProto *protobuf.AccountUpdateMulti) {
+	log.Debug().Stringer("accountUpdateMultiProto", accountUpdateMultiProto).Msg("<AccountUpdateMultiProtoBuf>")
+}
+
+func (w WrapperSync) AccountUpdateMultiEndProtoBuf(accountUpdateMultiEndProto *protobuf.AccountUpdateMultiEnd) {
+	log.Debug().Stringer("accountUpdateMultiEndProto", accountUpdateMultiEndProto).Msg("<AccountUpdateMultiEndProtoBuf>")
 }

@@ -18,7 +18,7 @@ const (
 	ApiPending    Status = "ApiPending"    // Order is pending processing by the API
 	ApiCancelled  Status = "ApiCancelled"  // after an order has been submitted and before it has been acknowledged, an API client client can request its cancelation, producing this state.
 	Cancelled     Status = "Cancelled"     // indicates that the balance of your order has been confirmed canceled by the IB system. This could occur unexpectedly when IB or the destination has rejected your order.
-	Filled        Status = "Filled"        // 	indicates that the order has been completely filled. Market orders executions will not always trigger a Filled status.
+	Filled        Status = "Filled"        // indicates that the order has been completely filled. Market orders executions will not always trigger a Filled status.
 	Inactive      Status = "Inactive"      // indicates that the order was received by the system but is no longer active because it was rejected or canceled.
 )
 
