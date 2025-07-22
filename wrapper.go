@@ -981,3 +981,43 @@ func (w WrapperSync) AccountUpdateMultiProtoBuf(accountUpdateMultiProto *protobu
 func (w WrapperSync) AccountUpdateMultiEndProtoBuf(accountUpdateMultiEndProto *protobuf.AccountUpdateMultiEnd) {
 	log.Debug().Stringer("accountUpdateMultiEndProto", accountUpdateMultiEndProto).Msg("<AccountUpdateMultiEndProtoBuf>")
 }
+
+func (w WrapperSync) HistoricalDataProtoBuf(historicalDataProto *protobuf.HistoricalData) {
+	log.Debug().Stringer("historicalDataProto", historicalDataProto).Msg("<HistoricalDataProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalDataUpdateProtoBuf(historicalDataUpdateProto *protobuf.HistoricalDataUpdate) {
+	log.Debug().Stringer("historicalDataUpdateProto", historicalDataUpdateProto).Msg("<HistoricalDataUpdateProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalDataEndProtoBuf(historicalDataEndProto *protobuf.HistoricalDataEnd) {
+	log.Debug().Stringer("historicalDataEndProto", historicalDataEndProto).Msg("<HistoricalDataEndProtoBuf>")
+}
+
+func (w WrapperSync) RealTimeBarTickProtoBuf(realTimeBarTickProto *protobuf.RealTimeBarTick) {
+	log.Debug().Stringer("realTimeBarTickProto", realTimeBarTickProto).Msg("<RealTimeBarTickProtoBuf>")
+}
+
+func (w WrapperSync) HeadTimestampProtoBuf(headTimestampProto *protobuf.HeadTimestamp) {
+	log.Debug().Stringer("headTimestampProto", headTimestampProto).Msg("<HeadTimestampProtoBuf>")
+}
+
+func (w WrapperSync) HistogramDataProtoBuf(histogramDataProto *protobuf.HistogramData) {
+	log.Debug().Stringer("histogramDataProto", histogramDataProto).Msg("<HistogramDataProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalTicksProtoBuf(historicalTicksProto *protobuf.HistoricalTicks) {
+	log.Debug().Stringer("historicalTicksProto", historicalTicksProto).Msg("<HistoricalTicksProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalTicksBidAskProtoBuf(historicalTicksBidAskProto *protobuf.HistoricalTicksBidAsk) {
+	log.Debug().Stringer("historicalTicksBidAskProto", historicalTicksBidAskProto).Msg("<HistoricalTicksBidAskProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalTicksLastProtoBuf(historicalTicksLastProto *protobuf.HistoricalTicksLast) {
+	log.Debug().Stringer("historicalTicksLastProto", historicalTicksLastProto).Msg("<HistoricalTicksLastProtoBuf>")
+}
+
+func (w WrapperSync) TickByTickDataProtoBuf(tickByTickDataProto *protobuf.TickByTickData) {
+	log.Debug().Stringer("tickByTickDataProto", tickByTickDataProto).Msg("<TickByTickDataProtoBuf>")
+}
