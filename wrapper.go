@@ -1021,3 +1021,35 @@ func (w WrapperSync) HistoricalTicksLastProtoBuf(historicalTicksLastProto *proto
 func (w WrapperSync) TickByTickDataProtoBuf(tickByTickDataProto *protobuf.TickByTickData) {
 	log.Debug().Stringer("tickByTickDataProto", tickByTickDataProto).Msg("<TickByTickDataProtoBuf>")
 }
+
+func (w WrapperSync) UpdateNewsBulletinProtoBuf(newsBulletinProto *protobuf.NewsBulletin) {
+	log.Debug().Stringer("newsBulletinProto", newsBulletinProto).Msg("<UpdateNewsBulletinProtoBuf>")
+}
+
+func (w WrapperSync) NewsArticleProtoBuf(newsArticleProto *protobuf.NewsArticle) {
+	log.Debug().Stringer("newsArticleProto", newsArticleProto).Msg("<NewsArticleProtoBuf>")
+}
+
+func (w WrapperSync) NewsProvidersProtoBuf(newsProvidersProto *protobuf.NewsProviders) {
+	log.Debug().Stringer("newsProvidersProto", newsProvidersProto).Msg("<NewsProvidersProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalNewsProtoBuf(historicalNewsProto *protobuf.HistoricalNews) {
+	log.Debug().Stringer("historicalNewsProto", historicalNewsProto).Msg("<HistoricalNewsProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalNewsEndProtoBuf(historicalNewsEndProto *protobuf.HistoricalNewsEnd) {
+	log.Debug().Stringer("historicalNewsEndProto", historicalNewsEndProto).Msg("<HistoricalNewsEndProtoBuf>")
+}
+
+func (w WrapperSync) WshMetaDataProtoBuf(wshMetaDataProto *protobuf.WshMetaData) {
+	log.Debug().Stringer("wshMetaDataProto", wshMetaDataProto).Msg("<WshMetaDataProtoBuf>")
+}
+
+func (w WrapperSync) WshEventDataProtoBuf(wshEventDataProto *protobuf.WshEventData) {
+	log.Debug().Stringer("wshEventDataProto", wshEventDataProto).Msg("<WshEventDataProtoBuf>")
+}
+
+func (w WrapperSync) TickNewsProtoBuf(tickNewsProto *protobuf.TickNews) {
+	log.Debug().Stringer("tickNewsProto", tickNewsProto).Msg("<TickNewsProtoBuf>")
+}
