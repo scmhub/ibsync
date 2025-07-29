@@ -1053,3 +1053,23 @@ func (w WrapperSync) WshEventDataProtoBuf(wshEventDataProto *protobuf.WshEventDa
 func (w WrapperSync) TickNewsProtoBuf(tickNewsProto *protobuf.TickNews) {
 	log.Debug().Stringer("tickNewsProto", tickNewsProto).Msg("<TickNewsProtoBuf>")
 }
+
+func (w WrapperSync) ScannerParametersProtoBuf(scannerParametersProto *protobuf.ScannerParameters) {
+	log.Debug().Stringer("scannerParametersProto", scannerParametersProto).Msg("<ScannerParametersProtoBuf>")
+}
+
+func (w WrapperSync) ScannerDataProtoBuf(scannerDataProto *protobuf.ScannerData) {
+	log.Debug().Stringer("scannerDataProto", scannerDataProto).Msg("<ScannerDataProtoBuf>")
+}
+
+func (w WrapperSync) FundamentalsDataProtoBuf(fundamentalsDataProto *protobuf.FundamentalsData) {
+	log.Debug().Stringer("fundamentalsDataProto", fundamentalsDataProto).Msg("<FundamentalsDataProtoBuf>")
+}
+
+func (w WrapperSync) PnLProtoBuf(pnlProto *protobuf.PnL) {
+	log.Debug().Stringer("pnlProto", pnlProto).Msg("<PnLProtoBuf>")
+}
+
+func (w WrapperSync) PnLSingleProtoBuf(pnlSingleProto *protobuf.PnLSingle) {
+	log.Debug().Stringer("pnlSingleProto", pnlSingleProto).Msg("<PnLSingleProtoBuf>")
+}
