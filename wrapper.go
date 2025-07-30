@@ -1073,3 +1073,27 @@ func (w WrapperSync) PnLProtoBuf(pnlProto *protobuf.PnL) {
 func (w WrapperSync) PnLSingleProtoBuf(pnlSingleProto *protobuf.PnLSingle) {
 	log.Debug().Stringer("pnlSingleProto", pnlSingleProto).Msg("<PnLSingleProtoBuf>")
 }
+
+func (w WrapperSync) ReceiveFAProtoBuf(receiveFAProto *protobuf.ReceiveFA) {
+	log.Debug().Stringer("receiveFAProto", receiveFAProto).Msg("<ReceiveFAProtoBuf>")
+}
+
+func (w WrapperSync) ReplaceFAEndProtoBuf(replaceFAEndProto *protobuf.ReplaceFAEnd) {
+	log.Debug().Stringer("replaceFAEndProto", replaceFAEndProto).Msg("<ReplaceFAEndProtoBuf>")
+}
+
+func (w WrapperSync) CommissionAndFeesReportProtoBuf(commissionAndFeesReportProto *protobuf.CommissionAndFeesReport) {
+	log.Debug().Stringer("commissionAndFeesReportProto", commissionAndFeesReportProto).Msg("<CommissionAndFeesReportProtoBuf>")
+}
+
+func (w WrapperSync) HistoricalScheduleProtoBuf(historicalScheduleProto *protobuf.HistoricalSchedule) {
+	log.Debug().Stringer("historicalScheduleProto", historicalScheduleProto).Msg("<HistoricalScheduleProtoBuf>")
+}
+
+func (w WrapperSync) RerouteMarketDataRequestProtoBuf(rerouteMarketDataRequestProto *protobuf.RerouteMarketDataRequest) {
+	log.Debug().Stringer("rerouteMarketDataRequestProto", rerouteMarketDataRequestProto).Msg("<RerouteMarketDataRequestProtoBuf>")
+}
+
+func (w WrapperSync) RerouteMarketDepthRequestProtoBuf(rerouteMarketDepthRequestProto *protobuf.RerouteMarketDepthRequest) {
+	log.Debug().Stringer("rerouteMarketDepthRequestProto", rerouteMarketDepthRequestProto).Msg("<RerouteMarketDepthRequestProtoBuf>")
+}
