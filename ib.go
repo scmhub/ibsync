@@ -958,7 +958,8 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 	if ok {
 		// modification of an existing order
 		if trade.IsDone() {
-			panic("try to modify a done trade")
+			log.Error().Int64("orderID", order.OrderID).Msg("try to modify a done trade")
+			return trade
 		}
 		logEntry := TradeLogEntry{
 			Time:    time.Now().UTC(),
