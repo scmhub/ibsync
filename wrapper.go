@@ -152,6 +152,7 @@ func (w *WrapperSync) OpenOrder(orderID OrderID, contract *Contract, order *Orde
 		trade.Order.OrderType = order.OrderType
 		trade.Order.OrderRef = order.OrderRef
 		trade.OrderStatus.Status = status
+		*trade.Contract = *contract
 		trade.mu.Unlock()
 	} else {
 		// Create a new trade if not found
