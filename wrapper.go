@@ -1098,3 +1098,35 @@ func (w WrapperSync) RerouteMarketDataRequestProtoBuf(rerouteMarketDataRequestPr
 func (w WrapperSync) RerouteMarketDepthRequestProtoBuf(rerouteMarketDepthRequestProto *protobuf.RerouteMarketDepthRequest) {
 	log.Debug().Stringer("rerouteMarketDepthRequestProto", rerouteMarketDepthRequestProto).Msg("<RerouteMarketDepthRequestProtoBuf>")
 }
+
+func (w WrapperSync) SecDefOptParameterProtoBuf(secDefOptParameterProto *protobuf.SecDefOptParameter) {
+	log.Debug().Stringer("secDefOptParameterProto", secDefOptParameterProto).Msg("<SecDefOptParameterProtoBuf>")
+}
+
+func (w WrapperSync) SecDefOptParameterEndProtoBuf(secDefOptParameterEndProto *protobuf.SecDefOptParameterEnd) {
+	log.Debug().Stringer("secDefOptParameterEndProto", secDefOptParameterEndProto).Msg("<SecDefOptParameterEndProtoBuf>")
+}
+
+func (w WrapperSync) SoftDollarTiersProtoBuf(softDollarTiersProto *protobuf.SoftDollarTiers) {
+	log.Debug().Stringer("softDollarTiersProto", softDollarTiersProto).Msg("<SoftDollarTiersProtoBuf>")
+}
+
+func (w WrapperSync) FamilyCodesProtoBuf(familyCodesProto *protobuf.FamilyCodes) {
+	log.Debug().Stringer("familyCodesProto", familyCodesProto).Msg("<FamilyCodesProtoBuf>")
+}
+
+func (w WrapperSync) SymbolSamplesProtoBuf(symbolSamplesProto *protobuf.SymbolSamples) {
+	log.Debug().Stringer("symbolSamplesProto", symbolSamplesProto).Msg("<SymbolSamplesProtoBuf>")
+}
+
+func (w WrapperSync) SmartComponentsProtoBuf(smartComponentsProto *protobuf.SmartComponents) {
+	log.Debug().Stringer("smartComponentsProto", smartComponentsProto).Msg("<SmartComponentsProtoBuf>")
+}
+
+func (w WrapperSync) MarketRuleProtoBuf(marketRuleProto *protobuf.MarketRule) {
+	log.Debug().Stringer("marketRuleProto", marketRuleProto).Msg("<MarketRuleProtoBuf>")
+}
+
+func (w WrapperSync) UserInfoProtoBuf(userInfoProto *protobuf.UserInfo) {
+	log.Debug().Stringer("userInfoProto", userInfoProto).Msg("<UserInfoProtoBuf>")
+}
