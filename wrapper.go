@@ -1130,3 +1130,34 @@ func (w WrapperSync) MarketRuleProtoBuf(marketRuleProto *protobuf.MarketRule) {
 func (w WrapperSync) UserInfoProtoBuf(userInfoProto *protobuf.UserInfo) {
 	log.Debug().Stringer("userInfoProto", userInfoProto).Msg("<UserInfoProtoBuf>")
 }
+func (w WrapperSync) NextValidIdProtoBuf(nextValidIdProto *protobuf.NextValidId) {
+	log.Debug().Stringer("nextValidIdProto", nextValidIdProto).Msg("<NextValidIdProtoBuf>")
+}
+
+func (w WrapperSync) CurrentTimeProtoBuf(currentTimeProto *protobuf.CurrentTime) {
+	log.Debug().Stringer("currentTimeProto", currentTimeProto).Msg("<CurrentTimeProtoBuf>")
+}
+
+func (w WrapperSync) CurrentTimeInMillisProtoBuf(currentTimeInMillisProto *protobuf.CurrentTimeInMillis) {
+	log.Debug().Stringer("currentTimeInMillisProto", currentTimeInMillisProto).Msg("<CurrentTimeInMillisProtoBuf>")
+}
+
+func (w WrapperSync) VerifyMessageApiProtoBuf(verifyMessageApiProto *protobuf.VerifyMessageApi) {
+	log.Debug().Stringer("verifyMessageApiProto", verifyMessageApiProto).Msg("<VerifyMessageApiProtoBuf>")
+}
+
+func (w WrapperSync) VerifyCompletedProtoBuf(verifyCompletedProto *protobuf.VerifyCompleted) {
+	log.Debug().Stringer("verifyCompletedProto", verifyCompletedProto).Msg("<VerifyCompletedProtoBuf>")
+}
+
+func (w WrapperSync) DisplayGroupListProtoBuf(displayGroupListProto *protobuf.DisplayGroupList) {
+	log.Debug().Stringer("displayGroupListProto", displayGroupListProto).Msg("<DisplayGroupListProtoBuf>")
+}
+
+func (w WrapperSync) DisplayGroupUpdatedProtoBuf(displayGroupUpdatedProto *protobuf.DisplayGroupUpdated) {
+	log.Debug().Stringer("displayGroupUpdatedProto", displayGroupUpdatedProto).Msg("<DisplayGroupUpdatedProtoBuf>")
+}
+
+func (w WrapperSync) MarketDepthExchangesProtoBuf(marketDepthExchangesProto *protobuf.MarketDepthExchanges) {
+	log.Debug().Stringer("marketDepthExchangesProto", marketDepthExchangesProto).Msg("<MarketDepthExchangesProtoBuf>")
+}

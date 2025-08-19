@@ -595,7 +595,7 @@ func TestSnapshot(t *testing.T) {
 func TestReqSmartComponent(t *testing.T) {
 	ib := getIB()
 
-	smartComponents, err := ib.ReqSmartComponents("c70003")
+	smartComponents, err := ib.ReqSmartComponents("a9")
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)

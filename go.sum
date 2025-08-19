@@ -17,10 +17,8 @@ github.com/robaho/fixed v0.0.0-20250130054609-fd0e46fcd988/go.mod h1:gOuZr6norIE
 github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
 github.com/rs/zerolog v1.34.0 h1:k43nTLIwcTVQAncfCw4KZ2VY6ukYoZaBPNOE8txlOeY=
 github.com/rs/zerolog v1.34.0/go.mod h1:bJsvje4Z08ROH4Nhs5iH600c3IkWhwp44iRc54W6wYQ=
-github.com/scmhub/ibapi v0.10.40-0.20250805200825-7a1ce3060105 h1:n+0yBOLkybpvqbF8c3zV7PW1K8gg7y+7QsrV5gVgGPI=
-github.com/scmhub/ibapi v0.10.40-0.20250805200825-7a1ce3060105/go.mod h1:/SW/xjAIG/7f/Deu6joy025myq3SpWn458puaZGO30Y=
-github.com/scmhub/ibapi v0.10.40-0.20250818095409-fb303682d175 h1:XLHjBj91Q6qYdqCCPo+CavNNwT2m3CmxtZRKPh2+WXs=
-github.com/scmhub/ibapi v0.10.40-0.20250818095409-fb303682d175/go.mod h1:IESp8zwMFuu5OhnZPMlXC/1K05B3bvw+7lj7c0OTsCw=
+github.com/scmhub/ibapi v0.10.40-0.20250819062216-e7b2cb15a941 h1:AqMF0wdODZ04DH107e1CAtyf1ec8d47QcYPQyypWB90=
+github.com/scmhub/ibapi v0.10.40-0.20250819062216-e7b2cb15a941/go.mod h1:IESp8zwMFuu5OhnZPMlXC/1K05B3bvw+7lj7c0OTsCw=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
