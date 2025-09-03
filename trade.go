@@ -2,6 +2,7 @@ package ibsync
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 )
@@ -136,6 +137,7 @@ type Trade struct {
 	fills       []*Fill
 	logs        []TradeLogEntry
 	done        chan struct{}
+	ack         chan struct{}
 }
 
 /* func (t* Trade) Equal(other Trade) bool{
@@ -161,6 +163,7 @@ func NewTrade(contract *Contract, order *Order, orderStatus ...OrderStatus) *Tra
 		fills:       make([]*Fill, 0),
 		logs:        []TradeLogEntry{{Time: time.Now().UTC(), Status: PendingSubmit}},
 		done:        make(chan struct{}),
+		ack:         make(chan struct{}),
 	}
 }
 
@@ -193,6 +196,11 @@ func (t *Trade) Done() <-chan struct{} {
 	return t.done
 }
 
+// Ack returns a channel that will be closed when the trade is acknowledged by IB.
+func (t *Trade) Ack() <-chan struct{} {
+	return t.ack
+}
+
 // markDone closes the done channel to signal trade completion.
 // This is an internal method and should be called with appropriate locking.
 func (t *Trade) markDone() {
@@ -212,6 +220,23 @@ func (t *Trade) markDoneSafe() {
 	t.markDone()
 }
 
+// markAck closes the ack channel to signal trade acknowledge.
+// This is an internal method and should be called with appropriate locking.
+func (t *Trade) markAck() {
+	// Ensure that the done channel is closed only once
+	select {
+	case <-t.ack:
+		// Channel already closed
+	default:
+		close(t.ack)
+	}
+}
+
+// reetAck resets the ack channel to a new open channel.
+func (t *Trade) resetAck() {
+	t.ack = make(chan struct{})
+}
+
 // Fills returns a copy of all fills for this trade
 func (t *Trade) Fills() []*Fill {
 	t.mu.RLock()
@@ -227,13 +252,20 @@ func (t *Trade) addFill(fill *Fill) {
 	t.fills = append(t.fills, fill)
 }
 
-// Logs returns a copy of all log entries for this trade
+// Logs returns a copy of all log entries for this trade.
+// Logs are sorted by timestamp.
 func (t *Trade) Logs() []TradeLogEntry {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
 	logs := make([]TradeLogEntry, len(t.logs))
 	copy(logs, t.logs)
+
+	// Sort by timestamp on read
+	sort.Slice(logs, func(i, j int) bool {
+		return logs[i].Time.Before(logs[j].Time)
+	})
+
 	return logs
 }
 

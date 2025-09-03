@@ -111,26 +111,21 @@ func (w *WrapperSync) OrderStatus(orderID OrderID, status string, filled Decimal
 	trade, ok := w.state.trades[key]
 	w.state.mu.Unlock()
 
-	if ok {
-		trade.mu.Lock()
-		oldStatus := trade.OrderStatus.Status
-		trade.OrderStatus = orderStatus
-
-		var msg string
-		if Status(status) == Submitted && len(trade.logs) > 0 && trade.logs[len(trade.logs)-1].Message == "Modify" {
-			msg = "Modified"
-		}
-		if msg != "" || orderStatus.Status != oldStatus {
-			logEntry := TradeLogEntry{Time: time.Now().UTC().Truncate(time.Minute), Status: Status(status), Message: msg}
-			trade.addLog(logEntry)
-		}
-		if Status(status).IsDone() {
-			trade.markDone()
-		}
-		trade.mu.Unlock()
-	} else {
+	if !ok {
 		log.Error().Err(errUnknowOrder).Int64("OrderID", orderID).Int64("ClientID", clientID).Msg("<OrderStatus>")
+		return
 	}
+
+	trade.mu.Lock()
+	trade.OrderStatus = orderStatus
+	logEntry := TradeLogEntry{Time: time.Now().UTC(), Status: Status(status), Message: "OrderStatus"}
+	trade.addLog(logEntry)
+
+	if Status(status).IsDone() {
+		trade.markDone()
+	}
+
+	trade.mu.Unlock()
 }
 
 func (w *WrapperSync) OpenOrder(orderID OrderID, contract *Contract, order *Order, orderState *OrderState) {
@@ -153,6 +148,7 @@ func (w *WrapperSync) OpenOrder(orderID OrderID, contract *Contract, order *Orde
 		trade.Order.OrderRef = order.OrderRef
 		trade.OrderStatus.Status = status
 		*trade.Contract = *contract
+		trade.markAck()
 		trade.mu.Unlock()
 	} else {
 		// Create a new trade if not found
@@ -161,6 +157,7 @@ func (w *WrapperSync) OpenOrder(orderID OrderID, contract *Contract, order *Orde
 			Status:  status,
 		}
 		trade = NewTrade(contract, order, orderStatus)
+		trade.markAck()
 		w.state.trades[key] = trade
 		w.state.permID2Trade[trade.Order.PermID] = trade
 	}
@@ -278,14 +275,14 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 		Contract:                contract,
 		Execution:               execution,
 		CommissionAndFeesReport: NewCommissionAndFeesReport(),
-		Time:                    executionTime,
+		Time:                    executionTime.UTC(),
 	}
 	_, ok = w.state.fills[execution.ExecID]
 	if !ok {
 		w.state.fills[execution.ExecID] = fill
 		trade.addFill(fill)
 		logEntry := TradeLogEntry{
-			Time:    executionTime,
+			Time:    executionTime.UTC(),
 			Status:  trade.OrderStatus.Status,
 			Message: fmt.Sprintf("Fill %v@%v", execution.Shares, execution.Price),
 		}
@@ -844,320 +841,320 @@ func (w WrapperSync) CurrentTimeInMillis(timeInMillis int64) {
 // Protobuf
 
 func (w WrapperSync) ExecDetailsProtoBuf(executionDetailsProto *protobuf.ExecutionDetails) {
-	log.Debug().Stringer("ExecutionDetailsProto", executionDetailsProto).Msg("<ExecDetailsProtoBuf>")
+	log.Trace().Stringer("ExecutionDetailsProto", executionDetailsProto).Msg("<ExecDetailsProtoBuf>")
 }
 
 func (w WrapperSync) ExecDetailsEndProtoBuf(executionDetailsEndProto *protobuf.ExecutionDetailsEnd) {
-	log.Debug().Stringer("ExecutionDetailsEndProto", executionDetailsEndProto).Msg("<ExecDetailsEndProtoBuf>")
+	log.Trace().Stringer("ExecutionDetailsEndProto", executionDetailsEndProto).Msg("<ExecDetailsEndProtoBuf>")
 }
 
 func (w WrapperSync) OrderStatusProtoBuf(orderStatusProto *protobuf.OrderStatus) {
-	log.Debug().Stringer("OrderStatusProto", orderStatusProto).Msg("<OrderStatusProtoBuf>")
+	log.Trace().Stringer("OrderStatusProto", orderStatusProto).Msg("<OrderStatusProtoBuf>")
 }
 
 func (w WrapperSync) OpenOrderProtoBuf(openOrderProto *protobuf.OpenOrder) {
-	log.Debug().Stringer("OpenOrderProto", openOrderProto).Msg("<OpenOrderProtoBuf>")
+	log.Trace().Stringer("OpenOrderProto", openOrderProto).Msg("<OpenOrderProtoBuf>")
 }
 
 func (w WrapperSync) OpenOrdersEndProtoBuf(openOrdersEndProto *protobuf.OpenOrdersEnd) {
-	log.Debug().Stringer("OpenOrdersEndProto", openOrdersEndProto).Msg("<OpenOrdersEndProtoBuf>")
+	log.Trace().Stringer("OpenOrdersEndProto", openOrdersEndProto).Msg("<OpenOrdersEndProtoBuf>")
 }
 
 func (w WrapperSync) ErrorProtoBuf(errorProto *protobuf.ErrorMessage) {
-	log.Debug().Stringer("ErrorProto", errorProto).Msg("<ErrorProtoBuf>")
+	log.Trace().Stringer("ErrorProto", errorProto).Msg("<ErrorProtoBuf>")
 }
 
 func (w WrapperSync) CompletedOrderProtoBuf(completedOrderProto *protobuf.CompletedOrder) {
-	log.Debug().Stringer("completedOrderProto", completedOrderProto).Msg("<completedOrderProtoBuf>")
+	log.Trace().Stringer("completedOrderProto", completedOrderProto).Msg("<completedOrderProtoBuf>")
 }
 
 func (w WrapperSync) CompletedOrdersEndProtoBuf(completedOrdersEndProto *protobuf.CompletedOrdersEnd) {
-	log.Debug().Stringer("completedOrdersEndProto", completedOrdersEndProto).Msg("<completedOrdersEndProtoBuf>")
+	log.Trace().Stringer("completedOrdersEndProto", completedOrdersEndProto).Msg("<completedOrdersEndProtoBuf>")
 }
 
 func (w WrapperSync) OrderBoundProtoBuf(orderBoundProto *protobuf.OrderBound) {
-	log.Debug().Stringer("orderBoundProto", orderBoundProto).Msg("<orderBoundProtoBuf>")
+	log.Trace().Stringer("orderBoundProto", orderBoundProto).Msg("<orderBoundProtoBuf>")
 }
 
 func (w WrapperSync) ContractDataProtoBuf(contractDataProto *protobuf.ContractData) {
-	log.Debug().Stringer("contractDataProto", contractDataProto).Msg("<ContractDataProtoBuf>")
+	log.Trace().Stringer("contractDataProto", contractDataProto).Msg("<ContractDataProtoBuf>")
 }
 
 func (w WrapperSync) BondContractDataProtoBuf(contractDataProto *protobuf.ContractData) {
-	log.Debug().Stringer("contractDataProto", contractDataProto).Msg("<BondContractDataProtoBuf>")
+	log.Trace().Stringer("contractDataProto", contractDataProto).Msg("<BondContractDataProtoBuf>")
 }
 
 func (w WrapperSync) ContractDataEndProtoBuf(contractDataEndProto *protobuf.ContractDataEnd) {
-	log.Debug().Stringer("contractDataEndProto", contractDataEndProto).Msg("<ContractDataEndProtoBuf>")
+	log.Trace().Stringer("contractDataEndProto", contractDataEndProto).Msg("<ContractDataEndProtoBuf>")
 }
 
 func (w WrapperSync) TickPriceProtoBuf(tickPriceProto *protobuf.TickPrice) {
-	log.Debug().Stringer("tickPriceProto", tickPriceProto).Msg("<TickPriceProtoBuf>")
+	log.Trace().Stringer("tickPriceProto", tickPriceProto).Msg("<TickPriceProtoBuf>")
 }
 
 func (w WrapperSync) TickSizeProtoBuf(tickSizeProto *protobuf.TickSize) {
-	log.Debug().Stringer("tickSizeProto", tickSizeProto).Msg("<TickSizeProtoBuf>")
+	log.Trace().Stringer("tickSizeProto", tickSizeProto).Msg("<TickSizeProtoBuf>")
 }
 
 func (w WrapperSync) TickOptionComputationProtoBuf(tickOptionComputationProto *protobuf.TickOptionComputation) {
-	log.Debug().Stringer("tickOptionComputationProto", tickOptionComputationProto).Msg("<TickOptionComputationProtoBuf>")
+	log.Trace().Stringer("tickOptionComputationProto", tickOptionComputationProto).Msg("<TickOptionComputationProtoBuf>")
 }
 
 func (w WrapperSync) TickGenericProtoBuf(tickGenericProto *protobuf.TickGeneric) {
-	log.Debug().Stringer("tickGenericProto", tickGenericProto).Msg("<TickGenericProtoBuf>")
+	log.Trace().Stringer("tickGenericProto", tickGenericProto).Msg("<TickGenericProtoBuf>")
 }
 
 func (w WrapperSync) TickStringProtoBuf(tickStringProto *protobuf.TickString) {
-	log.Debug().Stringer("tickStringProto", tickStringProto).Msg("<TickStringProtoBuf>")
+	log.Trace().Stringer("tickStringProto", tickStringProto).Msg("<TickStringProtoBuf>")
 }
 
 func (w WrapperSync) TickSnapshotEndProtoBuf(tickSnapshotEndProto *protobuf.TickSnapshotEnd) {
-	log.Debug().Stringer("tickSnapshotEndProto", tickSnapshotEndProto).Msg("<TickSnapshotEndProtoBuf>")
+	log.Trace().Stringer("tickSnapshotEndProto", tickSnapshotEndProto).Msg("<TickSnapshotEndProtoBuf>")
 }
 
 func (w WrapperSync) UpdateMarketDepthProtoBuf(marketDepthProto *protobuf.MarketDepth) {
-	log.Debug().Stringer("marketDepthProto", marketDepthProto).Msg("<UpdateMarketDepthProtoBuf>")
+	log.Trace().Stringer("marketDepthProto", marketDepthProto).Msg("<UpdateMarketDepthProtoBuf>")
 }
 
 func (w WrapperSync) UpdateMarketDepthL2ProtoBuf(marketDepthL2Proto *protobuf.MarketDepthL2) {
-	log.Debug().Stringer("marketDepthL2Proto", marketDepthL2Proto).Msg("<UpdateMarketDepthL2ProtoBuf>")
+	log.Trace().Stringer("marketDepthL2Proto", marketDepthL2Proto).Msg("<UpdateMarketDepthL2ProtoBuf>")
 }
 
 func (w WrapperSync) MarketDataTypeProtoBuf(marketDataTypeProto *protobuf.MarketDataType) {
-	log.Debug().Stringer("marketDataTypeProto", marketDataTypeProto).Msg("<MarketDataTypeProtoBuf>")
+	log.Trace().Stringer("marketDataTypeProto", marketDataTypeProto).Msg("<MarketDataTypeProtoBuf>")
 }
 
 func (w WrapperSync) TickReqParamsProtoBuf(tickReqParamsProto *protobuf.TickReqParams) {
-	log.Debug().Stringer("tickReqParamsProto", tickReqParamsProto).Msg("<TickReqParamsProtoBuf>")
+	log.Trace().Stringer("tickReqParamsProto", tickReqParamsProto).Msg("<TickReqParamsProtoBuf>")
 }
 
 func (w WrapperSync) UpdateAccountValueProtoBuf(accountValueProto *protobuf.AccountValue) {
-	log.Debug().Stringer("accountValueProto", accountValueProto).Msg("<UpdateAccountValueProtoBuf>")
+	log.Trace().Stringer("accountValueProto", accountValueProto).Msg("<UpdateAccountValueProtoBuf>")
 }
 
 func (w WrapperSync) UpdatePortfolioProtoBuf(portfolioValueProto *protobuf.PortfolioValue) {
-	log.Debug().Stringer("portfolioValueProto", portfolioValueProto).Msg("<UpdatePortfolioProtoBuf>")
+	log.Trace().Stringer("portfolioValueProto", portfolioValueProto).Msg("<UpdatePortfolioProtoBuf>")
 }
 
 func (w WrapperSync) UpdateAccountTimeProtoBuf(accountUpdateTimeProto *protobuf.AccountUpdateTime) {
-	log.Debug().Stringer("accountUpdateTimeProto", accountUpdateTimeProto).Msg("<UpdateAccountTimeProtoBuf>")
+	log.Trace().Stringer("accountUpdateTimeProto", accountUpdateTimeProto).Msg("<UpdateAccountTimeProtoBuf>")
 }
 
 func (w WrapperSync) AccountDataEndProtoBuf(accountDataEndProto *protobuf.AccountDataEnd) {
-	log.Debug().Stringer("accountDataEndProto", accountDataEndProto).Msg("<AccountDataEndProtoBuf>")
+	log.Trace().Stringer("accountDataEndProto", accountDataEndProto).Msg("<AccountDataEndProtoBuf>")
 }
 
 func (w WrapperSync) ManagedAccountsProtoBuf(managedAccountsProto *protobuf.ManagedAccounts) {
-	log.Debug().Stringer("managedAccountsProto", managedAccountsProto).Msg("<ManagedAccountsProtoBuf>")
+	log.Trace().Stringer("managedAccountsProto", managedAccountsProto).Msg("<ManagedAccountsProtoBuf>")
 }
 
 func (w WrapperSync) PositionProtoBuf(positionProto *protobuf.Position) {
-	log.Debug().Stringer("positionProto", positionProto).Msg("<PositionProtoBuf>")
+	log.Trace().Stringer("positionProto", positionProto).Msg("<PositionProtoBuf>")
 }
 
 func (w WrapperSync) PositionEndProtoBuf(positionEndProto *protobuf.PositionEnd) {
-	log.Debug().Stringer("positionEndProto", positionEndProto).Msg("<PositionEndProtoBuf>")
+	log.Trace().Stringer("positionEndProto", positionEndProto).Msg("<PositionEndProtoBuf>")
 }
 
 func (w WrapperSync) AccountSummaryProtoBuf(accountSummaryProto *protobuf.AccountSummary) {
-	log.Debug().Stringer("accountSummaryProto", accountSummaryProto).Msg("<AccountSummaryProtoBuf>")
+	log.Trace().Stringer("accountSummaryProto", accountSummaryProto).Msg("<AccountSummaryProtoBuf>")
 }
 
 func (w WrapperSync) AccountSummaryEndProtoBuf(accountSummaryEndProto *protobuf.AccountSummaryEnd) {
-	log.Debug().Stringer("accountSummaryEndProto", accountSummaryEndProto).Msg("<AccountSummaryEndProtoBuf>")
+	log.Trace().Stringer("accountSummaryEndProto", accountSummaryEndProto).Msg("<AccountSummaryEndProtoBuf>")
 }
 
 func (w WrapperSync) PositionMultiProtoBuf(positionMultiProto *protobuf.PositionMulti) {
-	log.Debug().Stringer("positionMultiProto", positionMultiProto).Msg("<PositionMultiProtoBuf>")
+	log.Trace().Stringer("positionMultiProto", positionMultiProto).Msg("<PositionMultiProtoBuf>")
 }
 
 func (w WrapperSync) PositionMultiEndProtoBuf(positionMultiEndProto *protobuf.PositionMultiEnd) {
-	log.Debug().Stringer("positionMultiEndProto", positionMultiEndProto).Msg("<PositionMultiEndProtoBuf>")
+	log.Trace().Stringer("positionMultiEndProto", positionMultiEndProto).Msg("<PositionMultiEndProtoBuf>")
 }
 
 func (w WrapperSync) AccountUpdateMultiProtoBuf(accountUpdateMultiProto *protobuf.AccountUpdateMulti) {
-	log.Debug().Stringer("accountUpdateMultiProto", accountUpdateMultiProto).Msg("<AccountUpdateMultiProtoBuf>")
+	log.Trace().Stringer("accountUpdateMultiProto", accountUpdateMultiProto).Msg("<AccountUpdateMultiProtoBuf>")
 }
 
 func (w WrapperSync) AccountUpdateMultiEndProtoBuf(accountUpdateMultiEndProto *protobuf.AccountUpdateMultiEnd) {
-	log.Debug().Stringer("accountUpdateMultiEndProto", accountUpdateMultiEndProto).Msg("<AccountUpdateMultiEndProtoBuf>")
+	log.Trace().Stringer("accountUpdateMultiEndProto", accountUpdateMultiEndProto).Msg("<AccountUpdateMultiEndProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalDataProtoBuf(historicalDataProto *protobuf.HistoricalData) {
-	log.Debug().Stringer("historicalDataProto", historicalDataProto).Msg("<HistoricalDataProtoBuf>")
+	log.Trace().Stringer("historicalDataProto", historicalDataProto).Msg("<HistoricalDataProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalDataUpdateProtoBuf(historicalDataUpdateProto *protobuf.HistoricalDataUpdate) {
-	log.Debug().Stringer("historicalDataUpdateProto", historicalDataUpdateProto).Msg("<HistoricalDataUpdateProtoBuf>")
+	log.Trace().Stringer("historicalDataUpdateProto", historicalDataUpdateProto).Msg("<HistoricalDataUpdateProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalDataEndProtoBuf(historicalDataEndProto *protobuf.HistoricalDataEnd) {
-	log.Debug().Stringer("historicalDataEndProto", historicalDataEndProto).Msg("<HistoricalDataEndProtoBuf>")
+	log.Trace().Stringer("historicalDataEndProto", historicalDataEndProto).Msg("<HistoricalDataEndProtoBuf>")
 }
 
 func (w WrapperSync) RealTimeBarTickProtoBuf(realTimeBarTickProto *protobuf.RealTimeBarTick) {
-	log.Debug().Stringer("realTimeBarTickProto", realTimeBarTickProto).Msg("<RealTimeBarTickProtoBuf>")
+	log.Trace().Stringer("realTimeBarTickProto", realTimeBarTickProto).Msg("<RealTimeBarTickProtoBuf>")
 }
 
 func (w WrapperSync) HeadTimestampProtoBuf(headTimestampProto *protobuf.HeadTimestamp) {
-	log.Debug().Stringer("headTimestampProto", headTimestampProto).Msg("<HeadTimestampProtoBuf>")
+	log.Trace().Stringer("headTimestampProto", headTimestampProto).Msg("<HeadTimestampProtoBuf>")
 }
 
 func (w WrapperSync) HistogramDataProtoBuf(histogramDataProto *protobuf.HistogramData) {
-	log.Debug().Stringer("histogramDataProto", histogramDataProto).Msg("<HistogramDataProtoBuf>")
+	log.Trace().Stringer("histogramDataProto", histogramDataProto).Msg("<HistogramDataProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalTicksProtoBuf(historicalTicksProto *protobuf.HistoricalTicks) {
-	log.Debug().Stringer("historicalTicksProto", historicalTicksProto).Msg("<HistoricalTicksProtoBuf>")
+	log.Trace().Stringer("historicalTicksProto", historicalTicksProto).Msg("<HistoricalTicksProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalTicksBidAskProtoBuf(historicalTicksBidAskProto *protobuf.HistoricalTicksBidAsk) {
-	log.Debug().Stringer("historicalTicksBidAskProto", historicalTicksBidAskProto).Msg("<HistoricalTicksBidAskProtoBuf>")
+	log.Trace().Stringer("historicalTicksBidAskProto", historicalTicksBidAskProto).Msg("<HistoricalTicksBidAskProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalTicksLastProtoBuf(historicalTicksLastProto *protobuf.HistoricalTicksLast) {
-	log.Debug().Stringer("historicalTicksLastProto", historicalTicksLastProto).Msg("<HistoricalTicksLastProtoBuf>")
+	log.Trace().Stringer("historicalTicksLastProto", historicalTicksLastProto).Msg("<HistoricalTicksLastProtoBuf>")
 }
 
 func (w WrapperSync) TickByTickDataProtoBuf(tickByTickDataProto *protobuf.TickByTickData) {
-	log.Debug().Stringer("tickByTickDataProto", tickByTickDataProto).Msg("<TickByTickDataProtoBuf>")
+	log.Trace().Stringer("tickByTickDataProto", tickByTickDataProto).Msg("<TickByTickDataProtoBuf>")
 }
 
 func (w WrapperSync) UpdateNewsBulletinProtoBuf(newsBulletinProto *protobuf.NewsBulletin) {
-	log.Debug().Stringer("newsBulletinProto", newsBulletinProto).Msg("<UpdateNewsBulletinProtoBuf>")
+	log.Trace().Stringer("newsBulletinProto", newsBulletinProto).Msg("<UpdateNewsBulletinProtoBuf>")
 }
 
 func (w WrapperSync) NewsArticleProtoBuf(newsArticleProto *protobuf.NewsArticle) {
-	log.Debug().Stringer("newsArticleProto", newsArticleProto).Msg("<NewsArticleProtoBuf>")
+	log.Trace().Stringer("newsArticleProto", newsArticleProto).Msg("<NewsArticleProtoBuf>")
 }
 
 func (w WrapperSync) NewsProvidersProtoBuf(newsProvidersProto *protobuf.NewsProviders) {
-	log.Debug().Stringer("newsProvidersProto", newsProvidersProto).Msg("<NewsProvidersProtoBuf>")
+	log.Trace().Stringer("newsProvidersProto", newsProvidersProto).Msg("<NewsProvidersProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalNewsProtoBuf(historicalNewsProto *protobuf.HistoricalNews) {
-	log.Debug().Stringer("historicalNewsProto", historicalNewsProto).Msg("<HistoricalNewsProtoBuf>")
+	log.Trace().Stringer("historicalNewsProto", historicalNewsProto).Msg("<HistoricalNewsProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalNewsEndProtoBuf(historicalNewsEndProto *protobuf.HistoricalNewsEnd) {
-	log.Debug().Stringer("historicalNewsEndProto", historicalNewsEndProto).Msg("<HistoricalNewsEndProtoBuf>")
+	log.Trace().Stringer("historicalNewsEndProto", historicalNewsEndProto).Msg("<HistoricalNewsEndProtoBuf>")
 }
 
 func (w WrapperSync) WshMetaDataProtoBuf(wshMetaDataProto *protobuf.WshMetaData) {
-	log.Debug().Stringer("wshMetaDataProto", wshMetaDataProto).Msg("<WshMetaDataProtoBuf>")
+	log.Trace().Stringer("wshMetaDataProto", wshMetaDataProto).Msg("<WshMetaDataProtoBuf>")
 }
 
 func (w WrapperSync) WshEventDataProtoBuf(wshEventDataProto *protobuf.WshEventData) {
-	log.Debug().Stringer("wshEventDataProto", wshEventDataProto).Msg("<WshEventDataProtoBuf>")
+	log.Trace().Stringer("wshEventDataProto", wshEventDataProto).Msg("<WshEventDataProtoBuf>")
 }
 
 func (w WrapperSync) TickNewsProtoBuf(tickNewsProto *protobuf.TickNews) {
-	log.Debug().Stringer("tickNewsProto", tickNewsProto).Msg("<TickNewsProtoBuf>")
+	log.Trace().Stringer("tickNewsProto", tickNewsProto).Msg("<TickNewsProtoBuf>")
 }
 
 func (w WrapperSync) ScannerParametersProtoBuf(scannerParametersProto *protobuf.ScannerParameters) {
-	log.Debug().Stringer("scannerParametersProto", scannerParametersProto).Msg("<ScannerParametersProtoBuf>")
+	log.Trace().Stringer("scannerParametersProto", scannerParametersProto).Msg("<ScannerParametersProtoBuf>")
 }
 
 func (w WrapperSync) ScannerDataProtoBuf(scannerDataProto *protobuf.ScannerData) {
-	log.Debug().Stringer("scannerDataProto", scannerDataProto).Msg("<ScannerDataProtoBuf>")
+	log.Trace().Stringer("scannerDataProto", scannerDataProto).Msg("<ScannerDataProtoBuf>")
 }
 
 func (w WrapperSync) FundamentalsDataProtoBuf(fundamentalsDataProto *protobuf.FundamentalsData) {
-	log.Debug().Stringer("fundamentalsDataProto", fundamentalsDataProto).Msg("<FundamentalsDataProtoBuf>")
+	log.Trace().Stringer("fundamentalsDataProto", fundamentalsDataProto).Msg("<FundamentalsDataProtoBuf>")
 }
 
 func (w WrapperSync) PnLProtoBuf(pnlProto *protobuf.PnL) {
-	log.Debug().Stringer("pnlProto", pnlProto).Msg("<PnLProtoBuf>")
+	log.Trace().Stringer("pnlProto", pnlProto).Msg("<PnLProtoBuf>")
 }
 
 func (w WrapperSync) PnLSingleProtoBuf(pnlSingleProto *protobuf.PnLSingle) {
-	log.Debug().Stringer("pnlSingleProto", pnlSingleProto).Msg("<PnLSingleProtoBuf>")
+	log.Trace().Stringer("pnlSingleProto", pnlSingleProto).Msg("<PnLSingleProtoBuf>")
 }
 
 func (w WrapperSync) ReceiveFAProtoBuf(receiveFAProto *protobuf.ReceiveFA) {
-	log.Debug().Stringer("receiveFAProto", receiveFAProto).Msg("<ReceiveFAProtoBuf>")
+	log.Trace().Stringer("receiveFAProto", receiveFAProto).Msg("<ReceiveFAProtoBuf>")
 }
 
 func (w WrapperSync) ReplaceFAEndProtoBuf(replaceFAEndProto *protobuf.ReplaceFAEnd) {
-	log.Debug().Stringer("replaceFAEndProto", replaceFAEndProto).Msg("<ReplaceFAEndProtoBuf>")
+	log.Trace().Stringer("replaceFAEndProto", replaceFAEndProto).Msg("<ReplaceFAEndProtoBuf>")
 }
 
 func (w WrapperSync) CommissionAndFeesReportProtoBuf(commissionAndFeesReportProto *protobuf.CommissionAndFeesReport) {
-	log.Debug().Stringer("commissionAndFeesReportProto", commissionAndFeesReportProto).Msg("<CommissionAndFeesReportProtoBuf>")
+	log.Trace().Stringer("commissionAndFeesReportProto", commissionAndFeesReportProto).Msg("<CommissionAndFeesReportProtoBuf>")
 }
 
 func (w WrapperSync) HistoricalScheduleProtoBuf(historicalScheduleProto *protobuf.HistoricalSchedule) {
-	log.Debug().Stringer("historicalScheduleProto", historicalScheduleProto).Msg("<HistoricalScheduleProtoBuf>")
+	log.Trace().Stringer("historicalScheduleProto", historicalScheduleProto).Msg("<HistoricalScheduleProtoBuf>")
 }
 
 func (w WrapperSync) RerouteMarketDataRequestProtoBuf(rerouteMarketDataRequestProto *protobuf.RerouteMarketDataRequest) {
-	log.Debug().Stringer("rerouteMarketDataRequestProto", rerouteMarketDataRequestProto).Msg("<RerouteMarketDataRequestProtoBuf>")
+	log.Trace().Stringer("rerouteMarketDataRequestProto", rerouteMarketDataRequestProto).Msg("<RerouteMarketDataRequestProtoBuf>")
 }
 
 func (w WrapperSync) RerouteMarketDepthRequestProtoBuf(rerouteMarketDepthRequestProto *protobuf.RerouteMarketDepthRequest) {
-	log.Debug().Stringer("rerouteMarketDepthRequestProto", rerouteMarketDepthRequestProto).Msg("<RerouteMarketDepthRequestProtoBuf>")
+	log.Trace().Stringer("rerouteMarketDepthRequestProto", rerouteMarketDepthRequestProto).Msg("<RerouteMarketDepthRequestProtoBuf>")
 }
 
 func (w WrapperSync) SecDefOptParameterProtoBuf(secDefOptParameterProto *protobuf.SecDefOptParameter) {
-	log.Debug().Stringer("secDefOptParameterProto", secDefOptParameterProto).Msg("<SecDefOptParameterProtoBuf>")
+	log.Trace().Stringer("secDefOptParameterProto", secDefOptParameterProto).Msg("<SecDefOptParameterProtoBuf>")
 }
 
 func (w WrapperSync) SecDefOptParameterEndProtoBuf(secDefOptParameterEndProto *protobuf.SecDefOptParameterEnd) {
-	log.Debug().Stringer("secDefOptParameterEndProto", secDefOptParameterEndProto).Msg("<SecDefOptParameterEndProtoBuf>")
+	log.Trace().Stringer("secDefOptParameterEndProto", secDefOptParameterEndProto).Msg("<SecDefOptParameterEndProtoBuf>")
 }
 
 func (w WrapperSync) SoftDollarTiersProtoBuf(softDollarTiersProto *protobuf.SoftDollarTiers) {
-	log.Debug().Stringer("softDollarTiersProto", softDollarTiersProto).Msg("<SoftDollarTiersProtoBuf>")
+	log.Trace().Stringer("softDollarTiersProto", softDollarTiersProto).Msg("<SoftDollarTiersProtoBuf>")
 }
 
 func (w WrapperSync) FamilyCodesProtoBuf(familyCodesProto *protobuf.FamilyCodes) {
-	log.Debug().Stringer("familyCodesProto", familyCodesProto).Msg("<FamilyCodesProtoBuf>")
+	log.Trace().Stringer("familyCodesProto", familyCodesProto).Msg("<FamilyCodesProtoBuf>")
 }
 
 func (w WrapperSync) SymbolSamplesProtoBuf(symbolSamplesProto *protobuf.SymbolSamples) {
-	log.Debug().Stringer("symbolSamplesProto", symbolSamplesProto).Msg("<SymbolSamplesProtoBuf>")
+	log.Trace().Stringer("symbolSamplesProto", symbolSamplesProto).Msg("<SymbolSamplesProtoBuf>")
 }
 
 func (w WrapperSync) SmartComponentsProtoBuf(smartComponentsProto *protobuf.SmartComponents) {
-	log.Debug().Stringer("smartComponentsProto", smartComponentsProto).Msg("<SmartComponentsProtoBuf>")
+	log.Trace().Stringer("smartComponentsProto", smartComponentsProto).Msg("<SmartComponentsProtoBuf>")
 }
 
 func (w WrapperSync) MarketRuleProtoBuf(marketRuleProto *protobuf.MarketRule) {
-	log.Debug().Stringer("marketRuleProto", marketRuleProto).Msg("<MarketRuleProtoBuf>")
+	log.Trace().Stringer("marketRuleProto", marketRuleProto).Msg("<MarketRuleProtoBuf>")
 }
 
 func (w WrapperSync) UserInfoProtoBuf(userInfoProto *protobuf.UserInfo) {
-	log.Debug().Stringer("userInfoProto", userInfoProto).Msg("<UserInfoProtoBuf>")
+	log.Trace().Stringer("userInfoProto", userInfoProto).Msg("<UserInfoProtoBuf>")
 }
 func (w WrapperSync) NextValidIdProtoBuf(nextValidIdProto *protobuf.NextValidId) {
-	log.Debug().Stringer("nextValidIdProto", nextValidIdProto).Msg("<NextValidIdProtoBuf>")
+	log.Trace().Stringer("nextValidIdProto", nextValidIdProto).Msg("<NextValidIdProtoBuf>")
 }
 
 func (w WrapperSync) CurrentTimeProtoBuf(currentTimeProto *protobuf.CurrentTime) {
-	log.Debug().Stringer("currentTimeProto", currentTimeProto).Msg("<CurrentTimeProtoBuf>")
+	log.Trace().Stringer("currentTimeProto", currentTimeProto).Msg("<CurrentTimeProtoBuf>")
 }
 
 func (w WrapperSync) CurrentTimeInMillisProtoBuf(currentTimeInMillisProto *protobuf.CurrentTimeInMillis) {
-	log.Debug().Stringer("currentTimeInMillisProto", currentTimeInMillisProto).Msg("<CurrentTimeInMillisProtoBuf>")
+	log.Trace().Stringer("currentTimeInMillisProto", currentTimeInMillisProto).Msg("<CurrentTimeInMillisProtoBuf>")
 }
 
 func (w WrapperSync) VerifyMessageApiProtoBuf(verifyMessageApiProto *protobuf.VerifyMessageApi) {
-	log.Debug().Stringer("verifyMessageApiProto", verifyMessageApiProto).Msg("<VerifyMessageApiProtoBuf>")
+	log.Trace().Stringer("verifyMessageApiProto", verifyMessageApiProto).Msg("<VerifyMessageApiProtoBuf>")
 }
 
 func (w WrapperSync) VerifyCompletedProtoBuf(verifyCompletedProto *protobuf.VerifyCompleted) {
-	log.Debug().Stringer("verifyCompletedProto", verifyCompletedProto).Msg("<VerifyCompletedProtoBuf>")
+	log.Trace().Stringer("verifyCompletedProto", verifyCompletedProto).Msg("<VerifyCompletedProtoBuf>")
 }
 
 func (w WrapperSync) DisplayGroupListProtoBuf(displayGroupListProto *protobuf.DisplayGroupList) {
-	log.Debug().Stringer("displayGroupListProto", displayGroupListProto).Msg("<DisplayGroupListProtoBuf>")
+	log.Trace().Stringer("displayGroupListProto", displayGroupListProto).Msg("<DisplayGroupListProtoBuf>")
 }
 
 func (w WrapperSync) DisplayGroupUpdatedProtoBuf(displayGroupUpdatedProto *protobuf.DisplayGroupUpdated) {
-	log.Debug().Stringer("displayGroupUpdatedProto", displayGroupUpdatedProto).Msg("<DisplayGroupUpdatedProtoBuf>")
+	log.Trace().Stringer("displayGroupUpdatedProto", displayGroupUpdatedProto).Msg("<DisplayGroupUpdatedProtoBuf>")
 }
 
 func (w WrapperSync) MarketDepthExchangesProtoBuf(marketDepthExchangesProto *protobuf.MarketDepthExchanges) {
-	log.Debug().Stringer("marketDepthExchangesProto", marketDepthExchangesProto).Msg("<MarketDepthExchangesProtoBuf>")
+	log.Trace().Stringer("marketDepthExchangesProto", marketDepthExchangesProto).Msg("<MarketDepthExchangesProtoBuf>")
 }

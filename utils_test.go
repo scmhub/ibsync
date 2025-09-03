@@ -193,8 +193,13 @@ func TestParseIBTime(t *testing.T) {
 			hasError: false,
 		},
 		{
-			input:    "20221125 10:00:00 Europe/Amsterdam",                           // DateTime with timezone
-			expected: time.Date(2022, 11, 25, 10, 0, 0, 0, time.FixedZone("CET", 0)), // Adjust to CET timezone
+			input:    "20221125 10:00:00 Europe/Amsterdam",                                 // DateTime with timezone
+			expected: time.Date(2022, 11, 25, 10, 0, 0, 0, time.FixedZone("CET", +1*3600)), // Adjust to CET timezone
+			hasError: false,
+		},
+		{
+			input:    "20250903 05:36:18 US/Eastern",                                      // DateTime with timezone
+			expected: time.Date(2025, 9, 3, 5, 36, 18, 0, time.FixedZone("EDT", -4*3600)), // Adjust to CET timezone
 			hasError: false,
 		},
 		{

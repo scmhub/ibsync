@@ -90,15 +90,16 @@ func ParseIBTime(s string) (time.Time, error) {
 	if strings.Count(s, " ") >= 2 && !strings.Contains(s, "  ") {
 		split := strings.Split(s, " ")
 		layout = "20060102 15:04:05"
-		t, err := time.Parse(layout, split[0]+" "+split[1])
-		if err != nil {
-			return time.Time{}, err
-		}
 		loc, err := time.LoadLocation(split[2])
 		if err != nil {
 			return time.Time{}, err
 		}
-		return t.In(loc), nil
+		// Parse the date and time in the specified timezone
+		t, err := time.ParseInLocation(layout, split[0]+" "+split[1], loc)
+		if err != nil {
+			return time.Time{}, err
+		}
+		return t, nil
 	}
 	// "YYYYmmdd  HH:MM:SS", "YYYY-mm-dd HH:MM:SS.0" or "YYYYmmdd-HH:MM:SS"
 	s = strings.ReplaceAll(s, "-", "")

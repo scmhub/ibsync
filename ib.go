@@ -961,17 +961,21 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 			log.Error().Int64("orderID", order.OrderID).Msg("try to modify a done trade")
 			return trade
 		}
+		trade.mu.Lock()
 		logEntry := TradeLogEntry{
 			Time:    time.Now().UTC(),
 			Status:  trade.OrderStatus.Status,
-			Message: "Modify",
+			Message: "Modifying order",
 		}
+		trade.resetAck()
 		trade.addLog(logEntry)
+		trade.mu.Unlock()
 		log.Debug().Int64("orderID", order.OrderID).Bool("new order", false).Msg("<PlaceOrder>")
 	} else {
 		// new order
 		order.ClientID = ib.config.ClientID
 		trade = NewTrade(contract, order)
+		trade.logs[0].Message = "Placing order"
 		key = orderKey(order.ClientID, order.OrderID, order.PermID) // clientID is updated
 		ib.state.trades[key] = trade
 		log.Debug().Int64("orderID", order.OrderID).Bool("new order", true).Msg("<PlaceOrder>")
@@ -1018,9 +1022,45 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 
 // CancelOrder cancels the given order.
 // orderCancel is an OrderCancel struct. You can pass NewOrderCancel()
-func (ib *IB) CancelOrder(order *Order, orderCancel OrderCancel) {
+func (ib *IB) CancelOrder(order *Order, orderCancel OrderCancel) *Trade {
 	log.Debug().Int64("orderID", order.OrderID).Msg("<CancelOrder>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
+	defer cancel()
+
+	key := orderKey(order.ClientID, order.OrderID, order.PermID)
+	trade, ok := ib.state.trades[key]
+
+	if !ok {
+		log.Error().Int64("orderID", order.OrderID).Msg("CancelOrder: unknown order")
+		return trade
+	}
+
+	if trade.IsDone() {
+		log.Error().Int64("orderID", order.OrderID).Msg("CancelOrder: try to cancel a done trade")
+		return trade
+	}
+
+	select {
+	case <-ctx.Done():
+		log.Error().Err(ctx.Err()).Msg("<CancelOrder>")
+	case <-trade.Ack():
+	}
+
 	ib.eClient.CancelOrder(order.OrderID, orderCancel)
+
+	status := PendingCancel
+	if (trade.OrderStatus.Status == PendingSubmit && !order.Transmit) || trade.OrderStatus.Status == Inactive {
+		status = Cancelled
+	}
+	logEntry := TradeLogEntry{
+		Time:    time.Now().UTC(),
+		Status:  status,
+		Message: "Cancel order",
+	}
+	trade.addLog(logEntry)
+	trade.OrderStatus.Status = status
+	return trade
 }
 
 // ReqGlobalCancel cancels all open orders globally. It cancels both API and TWS open orders.
