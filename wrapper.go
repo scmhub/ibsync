@@ -120,6 +120,7 @@ func (w *WrapperSync) OrderStatus(orderID OrderID, status string, filled Decimal
 	trade.OrderStatus = orderStatus
 	logEntry := TradeLogEntry{Time: time.Now().UTC(), Status: Status(status), Message: "OrderStatus"}
 	trade.addLog(logEntry)
+	trade.markAck()
 
 	if Status(status).IsDone() {
 		trade.markDone()
