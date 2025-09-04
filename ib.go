@@ -1049,24 +1049,50 @@ func (ib *IB) CancelOrder(order *Order, orderCancel OrderCancel) *Trade {
 
 	ib.eClient.CancelOrder(order.OrderID, orderCancel)
 
-	status := PendingCancel
-	if (trade.OrderStatus.Status == PendingSubmit && !order.Transmit) || trade.OrderStatus.Status == Inactive {
-		status = Cancelled
-	}
 	logEntry := TradeLogEntry{
 		Time:    time.Now().UTC(),
-		Status:  status,
-		Message: "Cancel order",
+		Status:  PendingCancel,
+		Message: "CancelOrder",
 	}
+
+	trade.mu.Lock()
 	trade.addLog(logEntry)
-	trade.OrderStatus.Status = status
+	trade.OrderStatus.Status = PendingCancel
+	trade.mu.Unlock()
+
 	return trade
 }
 
 // ReqGlobalCancel cancels all open orders globally. It cancels both API and TWS open orders.
 func (ib *IB) ReqGlobalCancel() {
 	log.Debug().Msg("<ReqGlobalCancel>")
+
+	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
+	defer cancel()
+
+	for _, trade := range ib.OpenTrades() {
+		select {
+		case <-ctx.Done():
+			log.Error().Err(ctx.Err()).Msg("<ReqGlobalCancel>")
+		case <-trade.Ack():
+		}
+	}
+
 	ib.eClient.ReqGlobalCancel(NewOrderCancel())
+
+	for _, trade := range ib.OpenTrades() {
+		logEntry := TradeLogEntry{
+			Time:    time.Now().UTC(),
+			Status:  PendingCancel,
+			Message: "GlobalCancel",
+		}
+
+		trade.mu.Lock()
+		trade.addLog(logEntry)
+		trade.OrderStatus.Status = PendingCancel
+		trade.mu.Unlock()
+	}
+
 }
 
 // ReqOpenOrders requests the open orders that were placed from this client.
