@@ -341,6 +341,7 @@ func (ib *IB) ReqPnL(account string, modelCode string) {
 	ib.state.mu.Lock()
 	_, ok := ib.state.pnlKey2ReqID[key]
 	if ok {
+		ib.state.mu.Unlock()
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Msg("Pnl request already made")
 		return
 	}
@@ -356,6 +357,7 @@ func (ib *IB) CancelPnL(account string, modelCode string) {
 	ib.state.mu.Lock()
 	reqID, ok := ib.state.pnlKey2ReqID[Key(account, modelCode)]
 	if !ok {
+		ib.state.mu.Unlock()
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Msg("No pnl request to cancel")
 		return
 	}
@@ -422,6 +424,7 @@ func (ib *IB) ReqPnLSingle(account string, modelCode string, contractID int64) {
 	ib.state.mu.Lock()
 	_, ok := ib.state.pnlSingleKey2ReqID[key]
 	if ok {
+		ib.state.mu.Unlock()
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Int64("contractID", contractID).Msg("Pnl single request already made")
 		return
 	}
@@ -436,6 +439,7 @@ func (ib *IB) CancelPnLSingle(account string, modelCode string, contractID int64
 	ib.state.mu.Lock()
 	reqID, ok := ib.state.pnlSingleKey2ReqID[Key(account, modelCode, contractID)]
 	if !ok {
+		ib.state.mu.Unlock()
 		log.Warn().Str("account", account).Str("modelCode", modelCode).Int64("contractID", contractID).Msg("No pnl single request to cancel")
 		return
 	}

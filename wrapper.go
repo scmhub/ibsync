@@ -269,6 +269,7 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 	}
 	executionTime, err := ParseIBTime(execution.Time)
 	if err != nil {
+		w.state.mu.Unlock()
 		log.Error().Err(err).Int64("reqID", reqID).Msg("<ExecDetails>")
 		return
 	}
@@ -453,6 +454,7 @@ func (w *WrapperSync) CommissionAndFeesReport(commissionAndFeesReport Commission
 	w.state.mu.Lock()
 	fill, ok := w.state.fills[commissionAndFeesReport.ExecID]
 	if !ok {
+		w.state.mu.Unlock()
 		log.Error().Err(errUnknowExecution).Stringer("commissionReportAndFees", commissionAndFeesReport).Msg("<CommissionReportAndFeesœ		>")
 		return
 	}
@@ -693,6 +695,7 @@ func (w *WrapperSync) Pnl(reqID int64, dailyPnL float64, unrealizedPnL float64, 
 	w.state.mu.Lock()
 	pnl, ok := w.state.reqID2Pnl[reqID]
 	if !ok {
+		w.state.mu.Unlock()
 		log.Error().Err(errUnknowReqID).Msg("<Pnl>")
 		return
 	}
@@ -709,6 +712,7 @@ func (w *WrapperSync) PnlSingle(reqID int64, pos Decimal, dailyPnL float64, unre
 	w.state.mu.Lock()
 	pnlSingle, ok := w.state.reqID2PnlSingle[reqID]
 	if !ok {
+		w.state.mu.Unlock()
 		log.Error().Err(errUnknowReqID).Msg("<PnlSingle>")
 		return
 	}
