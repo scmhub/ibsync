@@ -201,9 +201,9 @@ func (t *Ticker) LastExchange() string {
 }
 
 func (t *Ticker) LastTimestamp() string {
-	t.mu.lock()
+	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.lastTimesamp
+	return t.lastTimestamp
 }
 
 func (t *Ticker) PrevBid() float64 {
