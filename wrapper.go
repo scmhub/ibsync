@@ -262,8 +262,8 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 		key := orderKey(execution.ClientID, execution.OrderID, execution.PermID)
 		trade, ok = w.state.trades[key]
 		if !ok {
-			w.state.trades[strconv.FormatInt(execution.PermID, 10)] = trade
 			trade = NewTrade(contract, nil, OrderStatus{OrderID: execution.OrderID})
+			w.state.trades[strconv.FormatInt(execution.PermID, 10)] = trade
 			w.state.permID2Trade[execution.PermID] = trade
 		}
 	}
