@@ -285,7 +285,10 @@ func (t *Trade) Equal(other *Trade) bool {
 }
 
 func (t *Trade) String() string {
-	t.mu.RLock()
+	if !t.mu.TryRLock() {
+		return "Trade{unknow(could not lock)}"
+	}
+
 	defer t.mu.RUnlock()
 
 	return fmt.Sprintf("Trade{Contract: %v, Order: %v, Status: %v, Fills: %v}",
