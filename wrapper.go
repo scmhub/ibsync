@@ -789,20 +789,43 @@ func (w *WrapperSync) CompletedOrder(contract *Contract, order *Order, orderStat
 	logger := log.Debug().Str("account", order.Account).Str("PermID", LongMaxString(order.PermID)).Str("symbol", contract.Symbol).Str("action", order.Action).Str("orderType", order.OrderType).Str("totalQuantity", DecimalMaxString(order.TotalQuantity)).Str("filledQuantity", DecimalMaxString(order.FilledQuantity))
 	logger.Str("lmtPrice", FloatMaxString(order.LmtPrice)).Str("auxPrice", FloatMaxString(order.AuxPrice)).Str("Status", orderState.Status).Str("completedTime", orderState.CompletedTime).Str("CompletedStatus", orderState.CompletedStatus).Msg("<CompletedOrder>")
 
-	orderStatus := OrderStatus{
-		OrderID: order.OrderID,
-		Status:  Status(orderState.Status),
-	}
-	trade := NewTrade(contract, order, orderStatus)
-	trade.markDone()
+	key := orderKey(order.ClientID, order.OrderID, order.PermID)
+	status := Status(orderState.Status)
 
 	w.state.mu.Lock()
-	_, ok := w.state.permID2Trade[order.PermID]
-	if !ok {
-		w.state.trades[strconv.FormatInt(order.PermID, 10)] = trade
-		w.state.permID2Trade[order.PermID] = trade
+	defer w.state.mu.Unlock()
+
+	trade, ok := w.state.trades[key]
+
+	if ok {
+		trade.mu.Lock()
+		trade.Order.PermID = order.PermID
+		trade.Order.TotalQuantity = order.TotalQuantity
+		trade.Order.LmtPrice = order.LmtPrice
+		trade.Order.AuxPrice = order.AuxPrice
+		trade.Order.OrderType = order.OrderType
+		trade.Order.OrderRef = order.OrderRef
+		trade.OrderStatus.Status = status
+		*trade.Contract = *contract
+		trade.markAck()
+		trade.mu.Unlock()
+	} else {
+		orderStatus := OrderStatus{
+			OrderID: order.OrderID,
+			Status:  status,
+		}
+		trade = NewTrade(contract, order, orderStatus)
+		trade.markAck()
+		w.state.trades[key] = trade
+		w.state.permID2Trade[trade.Order.PermID] = trade
 	}
-	w.state.mu.Unlock()
+
+	trade.markDoneSafe()
+
+	// make sure that the client issues order ids larger than any
+	// order id encountered (even from other clients) to avoid
+	// "Duplicate order id" error
+	w.state.updateID(order.OrderID + 1)
 
 	// w.pubSub.Publish("CompletedOrder", Join(Encode(contract), Encode(order), Encode(orderState)))
 }
