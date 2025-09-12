@@ -1033,7 +1033,10 @@ func (ib *IB) CancelOrder(order *Order, orderCancel OrderCancel) *Trade {
 	defer cancel()
 
 	key := orderKey(order.ClientID, order.OrderID, order.PermID)
+
+	ib.state.mu.Lock()
 	trade, ok := ib.state.trades[key]
+	ib.state.mu.Unlock()
 
 	if !ok {
 		log.Error().Int64("orderID", order.OrderID).Msg("CancelOrder: unknown order")
