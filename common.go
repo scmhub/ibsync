@@ -19,7 +19,14 @@ func (avs AccountValues) String() string {
 	ss := make(map[string]string)
 	var dots string
 	for _, av := range avs {
-		dots = strings.Repeat(".", 40-len(av.Tag)-len(av.Value))
+		repeat := 40 - len(av.Tag) - len(av.Value)
+		if repeat < 0 {
+			repeat = 40 - len(av.Tag)
+		}
+		if repeat < 0 {
+			repeat = 40
+		}
+		dots = strings.Repeat(".", repeat)
 		ss[av.Account] = ss[av.Account] + fmt.Sprintf("\t%v%v%v %v\n", av.Tag, dots, av.Value, av.Currency)
 	}
 	s := "\n"
