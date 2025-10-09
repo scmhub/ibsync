@@ -1315,6 +1315,7 @@ func (ib *IB) ReqExecutions(execFilter ...*ExecutionFilter) ([]Execution, error)
 	defer unsubscribe()
 
 	ef := ibapi.NewExecutionFilter()
+	ef.ClientID = ib.config.ClientID
 	if len(execFilter) > 0 {
 		ef = execFilter[0]
 	}
@@ -1367,6 +1368,7 @@ func (ib *IB) ReqFills(execFilter ...*ExecutionFilter) ([]Fill, error) {
 	defer unsubscribe()
 
 	ef := ibapi.NewExecutionFilter()
+	ef.ClientID = ib.config.ClientID
 	if len(execFilter) > 0 {
 		ef = execFilter[0]
 	}
