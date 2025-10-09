@@ -89,16 +89,19 @@ func (ps *PubSub) UnsubscribeAll(topic any) {
 // Publish sends a message to all subscribers of a topic.
 func (ps *PubSub) Publish(topic any, msg string) {
 	ps.mu.RLock()
-	defer ps.mu.RUnlock()
-
 	t := fmt.Sprint(topic)
 
 	subscribers, exists := ps.topics[t]
 	if !exists {
+		ps.mu.RUnlock()
 		return
 	}
 
-	for _, ch := range subscribers {
+	subsCopy := make([]chan string, len(subscribers))
+	copy(subsCopy, subscribers)
+	ps.mu.RUnlock()
+
+	for _, ch := range subsCopy {
 		ch <- msg // must be blocking or "end" msgs can get through before msgs and will close the channel too early
 	}
 }

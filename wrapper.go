@@ -216,8 +216,8 @@ func (w *WrapperSync) UpdateAccountTime(timeStamp string) {
 		log.Error().Err(err).Msg("<UpdateAccountTime>")
 	}
 	w.state.mu.Lock()
-	defer w.state.mu.Unlock()
 	w.state.updateAccountTime = t
+	w.state.mu.Unlock()
 	w.pubSub.Publish("UpdateAccountTime", timeStamp)
 }
 
@@ -229,10 +229,10 @@ func (w *WrapperSync) AccountDownloadEnd(accountName string) {
 func (w *WrapperSync) NextValidID(reqID int64) {
 	log.Debug().Int64("reqID", reqID).Msg("<NextValidID>")
 	w.state.mu.Lock()
-	defer w.state.mu.Unlock()
 	if reqID > w.state.nextValidID {
 		w.state.nextValidID = reqID
 	}
+	w.state.mu.Unlock()
 	w.pubSub.Publish("NextValidID", Encode(reqID))
 }
 
@@ -326,8 +326,8 @@ func (w *WrapperSync) UpdateMktDepthL2(TickerID TickerID, position int64, market
 }
 func (w *WrapperSync) updateMktDepth(TickerID TickerID, position int64, marketMaker string, operation int64, side int64, price float64, size Decimal, isSmartDepth bool) {
 	w.state.mu.Lock()
-	defer w.state.mu.Unlock()
 	ticker := w.state.reqID2Ticker[TickerID]
+	w.state.mu.Unlock()
 
 	// side: 0 = ask, 1 = bid
 	var dom map[int64]DOMLevel
@@ -352,7 +352,9 @@ func (w *WrapperSync) updateMktDepth(TickerID TickerID, position int64, marketMa
 	}
 
 	tick := MktDepthData{Time: time.Now(), Position: position, MarketMaker: marketMaker, Operation: operation, Side: side, Price: price, Size: size, IsSmartDepth: isSmartDepth}
+	w.state.mu.Lock()
 	ticker.domTicks = append(ticker.domTicks, tick)
+	w.state.mu.Unlock()
 	w.pubSub.Publish(TickerID, "ok")
 }
 
@@ -368,8 +370,8 @@ func (w *WrapperSync) UpdateNewsBulletin(msgID int64, msgType int64, newsMessage
 func (w *WrapperSync) ManagedAccounts(accountsList []string) {
 	log.Debug().Strs("accountsList", accountsList).Msg("<ManagedAccounts>")
 	w.state.mu.Lock()
-	defer w.state.mu.Unlock()
 	w.state.accounts = accountsList
+	w.state.mu.Unlock()
 	w.pubSub.Publish("ManagedAccounts", Join(accountsList...))
 }
 
@@ -468,7 +470,6 @@ func (w *WrapperSync) Position(account string, contract *Contract, position Deci
 	log.Debug().Str("account", account).Stringer("contract", contract).Str("position", DecimalMaxString(position)).Str("avgCost", FloatMaxString(avgCost)).Msg("<Position>")
 	p := Position{Account: account, Contract: contract, Position: position, AvgCost: avgCost}
 	w.state.mu.Lock()
-	defer w.state.mu.Unlock()
 	positions, ok := w.state.positions[p.Account]
 	if !ok {
 		positions = make(map[int64]Position)
@@ -479,6 +480,7 @@ func (w *WrapperSync) Position(account string, contract *Contract, position Deci
 	} else {
 		positions[p.Contract.ConID] = p
 	}
+	w.state.mu.Unlock()
 	w.pubSub.Publish("Position", Encode(p))
 }
 
