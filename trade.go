@@ -26,7 +26,7 @@ const (
 // IsActive returns true if the status indicates the order is still active in the market.
 func (s Status) IsActive() bool {
 	switch s {
-	case PendingSubmit, ApiPending, PreSubmitted, Submitted:
+	case PendingSubmit, ApiPending, PreSubmitted, Submitted, PendingCancel:
 		return true
 	default:
 		return false
