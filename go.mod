@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/rs/zerolog v1.34.0
-	github.com/scmhub/ibapi v0.10.41-0.20251103134903-19012e505448
+	github.com/scmhub/ibapi v0.10.41-0.20251105093634-8b1715fb616c
 )
 
 require (
