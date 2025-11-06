@@ -31,6 +31,8 @@ github.com/scmhub/ibapi v0.10.41-0.20251103134903-19012e505448 h1:BOrfHssqkcbuF2
 github.com/scmhub/ibapi v0.10.41-0.20251103134903-19012e505448/go.mod h1:p3JXDMmQNWYhaZTTPaJOSkBmwSzUYeHOwevJYiJqcgc=
 github.com/scmhub/ibapi v0.10.41-0.20251105093634-8b1715fb616c h1:HU9jHRcbbIwJy+yGw3DgYL4Ph+lvDdsa74QYznoBHsc=
 github.com/scmhub/ibapi v0.10.41-0.20251105093634-8b1715fb616c/go.mod h1:p3JXDMmQNWYhaZTTPaJOSkBmwSzUYeHOwevJYiJqcgc=
+github.com/scmhub/ibapi v0.10.41-0.20251106152323-b971e06d9a8e h1:ZWMw2kn6vyKkDjfgRfnwRmn1KShWMjJ7x42JtzmhwpE=
+github.com/scmhub/ibapi v0.10.41-0.20251106152323-b971e06d9a8e/go.mod h1:p3JXDMmQNWYhaZTTPaJOSkBmwSzUYeHOwevJYiJqcgc=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
