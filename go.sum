@@ -41,6 +41,8 @@ github.com/scmhub/ibapi v0.10.41 h1:vdjBysM94O7+fi4WZyjzkAt0SeLfYRvBJuhozrAblNA=
 github.com/scmhub/ibapi v0.10.41/go.mod h1:Q1BAnuGhSUb5YgS4Zvkf+UzdrnpYD57+t+nrPbA+5AU=
 github.com/scmhub/ibapi v0.10.42-0.20251209150719-e9dd2fc9c37f h1:fOUfwoXgq49b33MQLSLTMWOfNKyTaduRHX6vLvE10BA=
 github.com/scmhub/ibapi v0.10.42-0.20251209150719-e9dd2fc9c37f/go.mod h1:Q1BAnuGhSUb5YgS4Zvkf+UzdrnpYD57+t+nrPbA+5AU=
+github.com/scmhub/ibapi v0.10.42-0.20260103094808-e041120a5bab h1:6+IPVQyf9aIh6pVFIVc9Llw+6LKjTtA/IIG72M+iUYc=
+github.com/scmhub/ibapi v0.10.42-0.20260103094808-e041120a5bab/go.mod h1:Q1BAnuGhSUb5YgS4Zvkf+UzdrnpYD57+t+nrPbA+5AU=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
@@ -64,3 +66,5 @@ google.golang.org/protobuf v1.36.9 h1:w2gp2mA27hUeUzj9Ex9FBjsBm40zfaDtEWow293U7I
 google.golang.org/protobuf v1.36.9/go.mod h1:fuxRtAxBytpl4zzqUh6/eyUujkJdNiuEkXntxiD/uRU=
 google.golang.org/protobuf v1.36.10 h1:AYd7cD/uASjIL6Q9LiTjz8JLcrh/88q5UObnmY3aOOE=
 google.golang.org/protobuf v1.36.10/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
+google.golang.org/protobuf v1.36.11 h1:fV6ZwhNocDyBLK0dj+fg8ektcVegBBuEolpbTQyBNVE=
+google.golang.org/protobuf v1.36.11/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
