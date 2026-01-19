@@ -1165,3 +1165,7 @@ func (w WrapperSync) DisplayGroupUpdatedProtoBuf(displayGroupUpdatedProto *proto
 func (w WrapperSync) MarketDepthExchangesProtoBuf(marketDepthExchangesProto *protobuf.MarketDepthExchanges) {
 	log.Trace().Stringer("marketDepthExchangesProto", marketDepthExchangesProto).Msg("<MarketDepthExchangesProtoBuf>")
 }
+
+func (w WrapperSync) ConfigResponseProtoBuf(configResponseProto *protobuf.ConfigResponse) {
+	log.Trace().Stringer("configResponseProto", configResponseProto).Msg("<ConfigResponseProtoBuf>")
+}
