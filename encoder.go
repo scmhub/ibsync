@@ -2,6 +2,7 @@ package ibsync
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/gob"
 	"fmt"
 	"strings"
@@ -103,7 +104,7 @@ func Encode(e any) string {
 	if err := enc.Encode(e); err != nil {
 		log.Panic().Err(err).Any("e", e).Msg("internal encoding error")
 	}
-	return b.String()
+	return base64.StdEncoding.EncodeToString(b.Bytes())
 }
 
 // Decode deserializes a gob-encoded string back into a Go value.
@@ -112,10 +113,13 @@ func Encode(e any) string {
 //   - e: A pointer to the target value where decoded data will be stored
 //   - data: The gob-encoded string to be decoded
 func Decode(e any, data string) error {
-	buf := bytes.NewBufferString(data)
+	raw, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(raw)
 	dec := gob.NewDecoder(buf)
-	err := dec.Decode(e)
-	return err
+	return dec.Decode(e)
 }
 
 // Join concatenates multiple strings using the package's default separator ("::").
