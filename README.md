@@ -2,7 +2,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/scmhub/ibsync.svg)](https://pkg.go.dev/github.com/scmhub/ibsync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-# Interactive Brokers Synchronous Golang Client 
+# Interactive Brokers Synchronous Golang Client
 
 `ibsync` is a Go package designed to simplify interaction with the [Interactive Brokers](https://www.interactivebrokers.com/en/home.php) API. It is inspired by the great [ib_insync](https://github.com/erdewit/ib_insync) Python library and based on [ibapi](https://github.com/scmhub/ibapi). It provides a synchronous, easy-to-use interface for account management, trade execution, real-time and historical market data within the IB ecosystem.
 
@@ -12,10 +12,12 @@
 ## Getting Started
 
 ### Prerequisites
-- **Go** version 1.23 or higher (recommended)
+
+- **Go** version 1.26 or higher (recommended)
 - An **Interactive Brokers** account with TWS or IB Gateway installed and running
 
 ### Installation
+
 Install the package via `go get`:
 
 ```bash
@@ -23,7 +25,9 @@ go get -u github.com/scmhub/ibsync
 ```
 
 ## Quick start
+
 Here’s a basic example to connect and get the managed accounts list:
+
 ```go
 package main
 
@@ -52,7 +56,9 @@ func main() {
 ## Usage guide
 
 ### Configuration
+
 Connect with a different configuration.
+
 ```go
 // New IB client & Connect
 ib := ibsync.NewIB()
@@ -73,7 +79,9 @@ defer ib.Disconnect()
 ```
 
 ### Account
+
 Account value, summary, positions, trades...
+
 ```go
 // Account Values
 accountValues := ib.AccountValues()
@@ -97,7 +105,9 @@ openTrades := ib.OpenTrades()
 ```
 
 ### Contract details
+
 Request contract details from symbol, exchange
+
 ```go
 // NewStock("AMD", "", "")
 amd := ibsync.NewStock("AMD", "", "")
@@ -110,7 +120,9 @@ fmt.Println("number of contract found for request NewStock(\"AMD\", \"\", \"\") 
 ```
 
 ### Pnl
+
 Subscribe to the pnl stream
+
 ```go
 // Request PnL subscription for the account.
 ib.ReqPnL(account, modelCode)
@@ -130,7 +142,9 @@ fmt.Println("Current PnL:", pnl)
 ```
 
 ### Orders
+
 Place an order and create a new trade. Modify or cancel the trade. Cancel all trades
+
 ```go
 // Create the contract
 eurusd := ibsync.NewForex("EUR", "IDEALPRO", "USD")
@@ -154,7 +168,9 @@ ib.ReqGlobalCancel()
 ```
 
 ### Bar data
+
 Real time and historical bar data.
+
 ```go
 // Historical data
 barChan, _ := ib.ReqHistoricalData(eurusd, endDateTime, duration, barSize, whatToShow, useRTH, formatDate)
@@ -180,7 +196,9 @@ cancel()
 ```
 
 ### Tick data
+
 Real time and historical tick data.
+
 ```go
 // Snapshot - Market price
 snapshot, err := ib.Snapshot(eurusd)
@@ -199,7 +217,9 @@ historicalTicks, err, done := ib.ReqHistoricalTicks(aapl, startDateTime, time.Ti
 ```
 
 ### Scanner
+
 Request scanner parameters and scanner subscritpion
+
 ```go
 // Scanner Parameters
 xml, err := ib.ReqScannerParameters()
@@ -225,24 +245,29 @@ filterScanData, err := ib.ReqScannerSubscription(scanSubscription, opts)
 ```
 
 ## Documentation
+
 For more information on how to use this package, please refer to the [GoDoc](https://pkg.go.dev/github.com/scmhub/ibsync) documentation and check the [examples](https://github.com/scmhub/ibsync/tree/main/examples) directory. You can also have a look at the `ib_test.go` file
 
 ## Acknowledgments
+
 - [ibapi](https://github.com/scmhub/ibapi) for core API functionality.
 - [ib_insync](https://github.com/erdewit/ib_insync) for API inspiration. (ib_insync is now [ib_async](https://github.com/ib-api-reloaded/ib_async))
 
 ## Notice of Non-Affiliation and Disclaimer
+
 > [!CAUTION]
 > This project is in the **beta phase** and is still undergoing testing and development. Users are advised to thoroughly test the software in non-production environments before relying on it for live trading. Features may be incomplete, and bugs may exist. Use at your own risk.
 
 > [!IMPORTANT]
->This project is **not affiliated** with Interactive Brokers Group, Inc. All references to Interactive Brokers, including trademarks, logos, and brand names, belong to their respective owners. The use of these names is purely for informational purposes and does not imply endorsement by Interactive Brokers.
+> This project is **not affiliated** with Interactive Brokers Group, Inc. All references to Interactive Brokers, including trademarks, logos, and brand names, belong to their respective owners. The use of these names is purely for informational purposes and does not imply endorsement by Interactive Brokers.
 
 > [!IMPORTANT]
->The authors of this package make **no guarantees** regarding the software's reliability, accuracy, or suitability for any particular purpose, including trading or financial decisions. **No liability** will be accepted for any financial losses, damages, or misinterpretations arising from the use of this software.
+> The authors of this package make **no guarantees** regarding the software's reliability, accuracy, or suitability for any particular purpose, including trading or financial decisions. **No liability** will be accepted for any financial losses, damages, or misinterpretations arising from the use of this software.
 
 ## License
+
 Distributed under the MIT License. See [LICENSE](./LICENSE) for more information.
 
 ## Author
+
 **Philippe Chavanne** - [contact](https://scm.cx/contact)
