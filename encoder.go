@@ -74,7 +74,7 @@ func msg2Error(msg string) ibapi.CodeMsgPair {
 }
 
 // orderKey generates a unique key for an order based on client ID, order ID, or permanent ID.
-func orderKey(clientID int64, orderID OrderID, permID int64) string {
+func orderKey(clientID int64, orderID int64, permID int64) string {
 	if orderID <= 0 {
 		return Key(permID)
 	}

@@ -26,7 +26,7 @@ func NewWrapperSync(state *ibState, pubSub *PubSub) *WrapperSync {
 	}
 }
 
-func (w *WrapperSync) TickPrice(reqID TickerID, tickType TickType, price float64, attrib TickAttrib) {
+func (w *WrapperSync) TickPrice(reqID int64, tickType TickType, price float64, attrib TickAttrib) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Str("tickName", TickName(tickType)).Str("price", FloatMaxString(price)).Bool("CanAutoExecute", attrib.CanAutoExecute).Bool("PastLimit", attrib.PastLimit).Bool("PreOpen", attrib.PreOpen).Msg("<TickPrice>")
 	tickPrice := TickPrice{TickType: tickType, Price: price, Attrib: attrib}
 
@@ -38,7 +38,7 @@ func (w *WrapperSync) TickPrice(reqID TickerID, tickType TickType, price float64
 	//w.pubSub.Publish(reqID, Join("price", Encode(tickPrice)))
 }
 
-func (w *WrapperSync) TickSize(reqID TickerID, tickType TickType, size Decimal) {
+func (w *WrapperSync) TickSize(reqID int64, tickType TickType, size Decimal) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Str("tickName", TickName(tickType)).Str("size", DecimalMaxString(size)).Msg("<TickSize>")
 	tickSize := TickSize{TickType: tickType, Size: size}
 
@@ -50,7 +50,7 @@ func (w *WrapperSync) TickSize(reqID TickerID, tickType TickType, size Decimal) 
 	//w.pubSub.Publish(reqID, Join("size", Encode(tickSize)))
 }
 
-func (w *WrapperSync) TickOptionComputation(reqID TickerID, tickType TickType, tickAttrib int64, impliedVol float64, delta float64, optPrice float64, pvDividend float64, gamma float64, vega float64, theta float64, undPrice float64) {
+func (w *WrapperSync) TickOptionComputation(reqID int64, tickType TickType, tickAttrib int64, impliedVol float64, delta float64, optPrice float64, pvDividend float64, gamma float64, vega float64, theta float64, undPrice float64) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Str("tickName", TickName(tickType)).Str("tickAttrib", IntMaxString(tickAttrib)).Str("impliedVol", FloatMaxString(impliedVol)).Str("delta", FloatMaxString(delta)).Str("optPrice", FloatMaxString(optPrice)).Str("pvDividend", FloatMaxString(pvDividend)).Str("gamma", FloatMaxString(gamma)).Str("vega", FloatMaxString(vega)).Str("theta", FloatMaxString(theta)).Str("undPrice", FloatMaxString(undPrice)).Msg("<TickOptionComputation>")
 	tickOptionComputation := TickOptionComputation{TickType: tickType, TickAttrib: tickAttrib, ImpliedVol: impliedVol, Delta: delta, OptPrice: optPrice, PvDividend: pvDividend, Gamma: gamma, Vega: vega, Theta: theta, UndPrice: undPrice}
 
@@ -66,7 +66,7 @@ func (w *WrapperSync) TickOptionComputation(reqID TickerID, tickType TickType, t
 	w.pubSub.Publish(reqID, Join("OptionComputation", Encode(tickOptionComputation)))
 }
 
-func (w *WrapperSync) TickGeneric(reqID TickerID, tickType TickType, value float64) {
+func (w *WrapperSync) TickGeneric(reqID int64, tickType TickType, value float64) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Str("value", FloatMaxString(value)).Msg("<TickGeneric>")
 	tickGeneric := TickGeneric{TickType: tickType, Value: value}
 
@@ -78,7 +78,7 @@ func (w *WrapperSync) TickGeneric(reqID TickerID, tickType TickType, value float
 	//w.pubSub.Publish(reqID, Join("generic", Encode(tickGeneric)))
 }
 
-func (w *WrapperSync) TickString(reqID TickerID, tickType TickType, value string) {
+func (w *WrapperSync) TickString(reqID int64, tickType TickType, value string) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Str("value", value).Msg("<TickString>")
 	tickString := TickString{TickType: tickType, Value: value}
 
@@ -90,7 +90,7 @@ func (w *WrapperSync) TickString(reqID TickerID, tickType TickType, value string
 	//w.pubSub.Publish(reqID, Join("string", Encode(tickString)))
 }
 
-func (w *WrapperSync) TickEFP(reqID TickerID, tickType TickType, basisPoints float64, formattedBasisPoints string, totalDividends float64, holdDays int64, futureLastTradeDate string, dividendImpact float64, dividendsToLastTradeDate float64) {
+func (w *WrapperSync) TickEFP(reqID int64, tickType TickType, basisPoints float64, formattedBasisPoints string, totalDividends float64, holdDays int64, futureLastTradeDate string, dividendImpact float64, dividendsToLastTradeDate float64) {
 	log.Debug().Int64("reqID", reqID).Int64("tickType", tickType).Float64("basisPoints", basisPoints).Str("formattedBasisPoints", formattedBasisPoints).Float64("totalDividends", totalDividends).Int64("holdDays", holdDays).Str("futureLastTradeDate", futureLastTradeDate).Float64("dividendImpact", dividendImpact).Float64("dividendsToLastTradeDate", dividendsToLastTradeDate).Msg("<TickEFP>")
 	tickEFP := TickEFP{TickType: tickType, BasisPoints: basisPoints, FormattedBasisPoints: formattedBasisPoints, TotalDividends: totalDividends, HoldDays: holdDays, FutureLastTradeDate: futureLastTradeDate, DividendImpact: dividendImpact, DividendsToLastTradeDate: dividendsToLastTradeDate}
 
@@ -102,7 +102,7 @@ func (w *WrapperSync) TickEFP(reqID TickerID, tickType TickType, basisPoints flo
 	//w.pubSub.Publish(reqID, Join("efp", Encode(tickEFP)))
 }
 
-func (w *WrapperSync) OrderStatus(orderID OrderID, status string, filled Decimal, remaining Decimal, avgFillPrice float64, permID int64, parentID int64, lastFillPrice float64, clientID int64, whyHeld string, mktCapPrice float64) {
+func (w *WrapperSync) OrderStatus(orderID int64, status string, filled Decimal, remaining Decimal, avgFillPrice float64, permID int64, parentID int64, lastFillPrice float64, clientID int64, whyHeld string, mktCapPrice float64) {
 	log.Debug().Int64("orderID", orderID).Str("status", status).Stringer("filled", filled).Stringer("remaining", remaining).Float64("avgFillPrice", avgFillPrice).Int64("permID", permID).Int64("parentID", parentID).Float64("lastFillPrice", lastFillPrice).Int64("clientID", clientID).Str("whyHeld", whyHeld).Float64("mktCapPrice", mktCapPrice).Msg("<OrderStatus>")
 	orderStatus := OrderStatus{OrderID: orderID, Status: Status(status), Filled: filled, Remaining: remaining, AvgFillPrice: avgFillPrice, PermID: permID, ParentID: parentID, LastFillPrice: lastFillPrice, ClientID: clientID, WhyHeld: whyHeld, MktCapPrice: mktCapPrice}
 	key := orderKey(clientID, orderID, permID)
@@ -112,7 +112,7 @@ func (w *WrapperSync) OrderStatus(orderID OrderID, status string, filled Decimal
 	w.state.mu.Unlock()
 
 	if !ok {
-		log.Error().Err(errUnknowOrder).Int64("OrderID", orderID).Int64("ClientID", clientID).Msg("<OrderStatus>")
+		log.Error().Err(errUnknowOrder).Int64("int64", orderID).Int64("ClientID", clientID).Msg("<OrderStatus>")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (w *WrapperSync) OrderStatus(orderID OrderID, status string, filled Decimal
 	trade.mu.Unlock()
 }
 
-func (w *WrapperSync) OpenOrder(orderID OrderID, contract *Contract, order *Order, orderState *OrderState) {
+func (w *WrapperSync) OpenOrder(orderID int64, contract *Contract, order *Order, orderState *OrderState) {
 	log.Debug().Int64("orderID", orderID).Stringer("contract", contract).Stringer("order", order).Stringer("orderState", orderState).Msg("<OpenOrder>")
 	key := orderKey(order.ClientID, order.OrderID, order.PermID)
 	status := Status(orderState.Status)
@@ -300,7 +300,7 @@ func (w *WrapperSync) ExecDetailsEnd(reqID int64) {
 	w.pubSub.Publish(reqID, "end")
 }
 
-func (w *WrapperSync) Error(reqID TickerID, errorTime int64, errCode int64, errString string, advancedOrderRejectJson string) {
+func (w *WrapperSync) Error(reqID int64, errorTime int64, errCode int64, errString string, advancedOrderRejectJson string) {
 	logger := log.Error()
 	if slices.Contains(warningCodes, errCode) { //|| (2100 <= errCode && errCode < 2200) {
 		logger = log.Warn()
@@ -315,18 +315,18 @@ func (w *WrapperSync) Error(reqID TickerID, errorTime int64, errCode int64, errS
 	w.pubSub.Publish(reqID, Join("error", Encode(ibapi.CodeMsgPair{Code: errCode, Msg: errString})))
 }
 
-func (w *WrapperSync) UpdateMktDepth(TickerID TickerID, position int64, operation int64, side int64, price float64, size Decimal) {
-	log.Debug().Int64("TickerID", TickerID).Int64("position", position).Int64("operation", operation).Int64("side", side).Str("price", FloatMaxString(price)).Str("size", DecimalMaxString(size)).Msg("<UpdateMktDepth>")
-	w.updateMktDepth(TickerID, position, "", operation, side, price, size, false)
+func (w *WrapperSync) UpdateMktDepth(reqID int64, position int64, operation int64, side int64, price float64, size Decimal) {
+	log.Debug().Int64("reqID", reqID).Int64("position", position).Int64("operation", operation).Int64("side", side).Str("price", FloatMaxString(price)).Str("size", DecimalMaxString(size)).Msg("<UpdateMktDepth>")
+	w.updateMktDepth(reqID, position, "", operation, side, price, size, false)
 }
 
-func (w *WrapperSync) UpdateMktDepthL2(TickerID TickerID, position int64, marketMaker string, operation int64, side int64, price float64, size Decimal, isSmartDepth bool) {
-	log.Debug().Int64("TickerID", TickerID).Int64("position", position).Str("marketMaker", marketMaker).Int64("operation", operation).Int64("side", side).Str("price", FloatMaxString(price)).Str("size", DecimalMaxString(size)).Bool("isSmartDepth", isSmartDepth).Msg("<UpdateMktDepthL2>")
-	w.updateMktDepth(TickerID, position, marketMaker, operation, side, price, size, isSmartDepth)
+func (w *WrapperSync) UpdateMktDepthL2(reqID int64, position int64, marketMaker string, operation int64, side int64, price float64, size Decimal, isSmartDepth bool) {
+	log.Debug().Int64("reqID", reqID).Int64("position", position).Str("marketMaker", marketMaker).Int64("operation", operation).Int64("side", side).Str("price", FloatMaxString(price)).Str("size", DecimalMaxString(size)).Bool("isSmartDepth", isSmartDepth).Msg("<UpdateMktDepthL2>")
+	w.updateMktDepth(reqID, position, marketMaker, operation, side, price, size, isSmartDepth)
 }
-func (w *WrapperSync) updateMktDepth(TickerID TickerID, position int64, marketMaker string, operation int64, side int64, price float64, size Decimal, isSmartDepth bool) {
+func (w *WrapperSync) updateMktDepth(reqID int64, position int64, marketMaker string, operation int64, side int64, price float64, size Decimal, isSmartDepth bool) {
 	w.state.mu.Lock()
-	ticker := w.state.reqID2Ticker[TickerID]
+	ticker := w.state.reqID2Ticker[reqID]
 	w.state.mu.Unlock()
 
 	// side: 0 = ask, 1 = bid
@@ -355,7 +355,7 @@ func (w *WrapperSync) updateMktDepth(TickerID TickerID, position int64, marketMa
 	w.state.mu.Lock()
 	ticker.domTicks = append(ticker.domTicks, tick)
 	w.state.mu.Unlock()
-	w.pubSub.Publish(TickerID, "ok")
+	w.pubSub.Publish(reqID, "ok")
 }
 
 func (w *WrapperSync) UpdateNewsBulletin(msgID int64, msgType int64, newsMessage string, originExch string) {
@@ -594,15 +594,15 @@ func (w *WrapperSync) MktDepthExchanges(depthMktDataDescriptions []DepthMktDataD
 	w.pubSub.Publish("MktDepthExchanges", Encode(depthMktDataDescriptions))
 }
 
-func (w *WrapperSync) TickNews(TickerID TickerID, timeStamp int64, providerCode string, articleID string, headline string, extraData string) {
-	log.Debug().Int64("TickerID", TickerID).Str("timeStamp", IntMaxString(timeStamp)).Str("providerCode", providerCode).Str("articleID", articleID).Str("headline", headline).Str("extraData", extraData).Msg("<TickNews>")
+func (w *WrapperSync) TickNews(tickerID int64, timeStamp int64, providerCode string, articleID string, headline string, extraData string) {
+	log.Debug().Int64("int64", tickerID).Str("timeStamp", IntMaxString(timeStamp)).Str("providerCode", providerCode).Str("articleID", articleID).Str("headline", headline).Str("extraData", extraData).Msg("<TickNews>")
 	newsTick := NewsTick{TimeStamp: timeStamp, ProviderCode: providerCode, ArticleId: articleID, Headline: headline, ExtraData: extraData}
 
 	w.state.mu.Lock()
 	w.state.newsTicks = append(w.state.newsTicks, newsTick)
 	w.state.mu.Unlock()
 
-	w.pubSub.Publish(TickerID, Encode(newsTick))
+	w.pubSub.Publish(tickerID, Encode(newsTick))
 }
 
 func (w *WrapperSync) SmartComponents(reqID int64, smartComponents []SmartComponent) {
@@ -613,8 +613,8 @@ func (w *WrapperSync) SmartComponents(reqID int64, smartComponents []SmartCompon
 	w.pubSub.Publish(reqID, Encode(smartComponents))
 }
 
-func (w *WrapperSync) TickReqParams(tickerID TickerID, minTick float64, bboExchange string, snapshotPermissions int64) {
-	log.Debug().Int64("TickerID", tickerID).Str("minTick", FloatMaxString(minTick)).Str("bboExchange", bboExchange).Str("snapshotPermissions", IntMaxString(snapshotPermissions)).Msg("<TickReqParams>")
+func (w *WrapperSync) TickReqParams(tickerID int64, minTick float64, bboExchange string, snapshotPermissions int64) {
+	log.Debug().Int64("int64", tickerID).Str("minTick", FloatMaxString(minTick)).Str("bboExchange", bboExchange).Str("snapshotPermissions", IntMaxString(snapshotPermissions)).Msg("<TickReqParams>")
 
 	w.state.mu.Lock()
 	defer w.state.mu.Unlock()
@@ -784,7 +784,7 @@ func (w *WrapperSync) TickByTickMidPoint(reqID int64, time int64, midPoint float
 }
 
 func (w *WrapperSync) OrderBound(permID int64, clientID int64, orderID int64) {
-	log.Debug().Str("permID", LongMaxString(permID)).Str("clientID", IntMaxString(clientID)).Str("OrderID", IntMaxString(orderID)).Msg("<OrderBound>")
+	log.Debug().Str("permID", LongMaxString(permID)).Str("clientID", IntMaxString(clientID)).Str("int64", IntMaxString(orderID)).Msg("<OrderBound>")
 }
 
 func (w *WrapperSync) CompletedOrder(contract *Contract, order *Order, orderState *OrderState) {

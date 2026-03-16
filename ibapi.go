@@ -56,20 +56,20 @@ type (
 	NewsProvider                    = ibapi.NewsProvider
 	Order                           = ibapi.Order
 	OrderCancel                     = ibapi.OrderCancel
-	OrderID                         = ibapi.OrderID
-	OrderState                      = ibapi.OrderState
-	PriceIncrement                  = ibapi.PriceIncrement
-	ScanData                        = ibapi.ScanData
-	ScannerSubscription             = ibapi.ScannerSubscription
-	SmartComponent                  = ibapi.SmartComponent
-	SoftDollarTier                  = ibapi.SoftDollarTier
-	TagValue                        = ibapi.TagValue
-	TickerID                        = ibapi.TickerID
-	TickType                        = ibapi.TickType
-	TickAttrib                      = ibapi.TickAttrib
-	TickAttribLast                  = ibapi.TickAttribLast
-	TickAttribBidAsk                = ibapi.TickAttribBidAsk
-	WshEventData                    = ibapi.WshEventData
+	//int64                         = ibapi.int64
+	OrderState          = ibapi.OrderState
+	PriceIncrement      = ibapi.PriceIncrement
+	ScanData            = ibapi.ScanData
+	ScannerSubscription = ibapi.ScannerSubscription
+	SmartComponent      = ibapi.SmartComponent
+	SoftDollarTier      = ibapi.SoftDollarTier
+	TagValue            = ibapi.TagValue
+	//int64                        = ibapi.int64
+	TickType         = ibapi.TickType
+	TickAttrib       = ibapi.TickAttrib
+	TickAttribLast   = ibapi.TickAttribLast
+	TickAttribBidAsk = ibapi.TickAttribBidAsk
+	WshEventData     = ibapi.WshEventData
 )
 
 var (
