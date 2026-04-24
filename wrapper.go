@@ -419,11 +419,6 @@ func (w *WrapperSync) CurrentTime(t int64) {
 	w.pubSub.Publish("CurrentTime", Encode(currentTime))
 }
 
-func (w *WrapperSync) FundamentalData(reqID int64, data string) {
-	log.Debug().Int64("reqID", reqID).Str("data", data).Msg("<FundamentalData>")
-	w.pubSub.Publish(reqID, data)
-}
-
 func (w *WrapperSync) DeltaNeutralValidation(reqID int64, deltaNeutralContract DeltaNeutralContract) {
 	log.Debug().Int64("reqID", reqID).Stringer("deltaNeutralContract", deltaNeutralContract).Msg("<DeltaNeutralValidation>")
 	w.pubSub.Publish(reqID, Encode(deltaNeutralContract))
@@ -1065,10 +1060,6 @@ func (w WrapperSync) ScannerParametersProtoBuf(scannerParametersProto *protobuf.
 
 func (w WrapperSync) ScannerDataProtoBuf(scannerDataProto *protobuf.ScannerData) {
 	log.Trace().Stringer("scannerDataProto", scannerDataProto).Msg("<ScannerDataProtoBuf>")
-}
-
-func (w WrapperSync) FundamentalsDataProtoBuf(fundamentalsDataProto *protobuf.FundamentalsData) {
-	log.Trace().Stringer("fundamentalsDataProto", fundamentalsDataProto).Msg("<FundamentalsDataProtoBuf>")
 }
 
 func (w WrapperSync) PnLProtoBuf(pnlProto *protobuf.PnL) {

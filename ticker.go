@@ -1,7 +1,6 @@
 package ibsync
 
 import (
-	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -835,28 +834,6 @@ func (t *Ticker) SetTickString(ts TickString) {
 		t.lastExchange = ts.Value
 	case LAST_TIMESTAMP, DELAYED_LAST_TIMESTAMP:
 		t.lastTimestamp = ts.Value
-	case FUNDAMENTAL_RATIOS:
-		d := make(FundamentalRatios)
-		for _, t := range strings.Split(ts.Value, ";") {
-			if t == "" {
-				continue
-			}
-			kv := strings.Split(t, "=")
-			if len(kv) == 2 {
-				k, v := kv[0], kv[1]
-				if v == "-99999.99" {
-					d[k] = UNSET_FLOAT
-					continue
-				}
-				f, err := strconv.ParseFloat(v, 64)
-				if err != nil {
-					log.Warn().Err(errors.New("fundamental ratio error")).Str("key", k).Str("value", v).Msg("SetTickString")
-					continue
-				}
-				d[k] = f
-			}
-		}
-		t.fundamentalRatios = d
 	case RT_VOLUME, RT_TRD_VOLUME:
 		// RT Volume or RT Trade Volume value: " price;size;ms since epoch;total volume;VWAP;single trade"
 		split := strings.Split(ts.Value, ";")

@@ -220,7 +220,7 @@ const (
 	CLOSE_EFP_COMPUTATION     = ibapi.CLOSE_EFP_COMPUTATION
 	LAST_TIMESTAMP            = ibapi.LAST_TIMESTAMP
 	SHORTABLE                 = ibapi.SHORTABLE
-	FUNDAMENTAL_RATIOS        = ibapi.FUNDAMENTAL_RATIOS
+	// FUNDAMENTAL_RATIOS        = ibapi.FUNDAMENTAL_RATIOS // removed in ibapi v0.10.46
 	RT_VOLUME                 = ibapi.RT_VOLUME
 	HALTED                    = ibapi.HALTED
 	BID_YIELD                 = ibapi.BID_YIELD

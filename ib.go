@@ -2211,44 +2211,6 @@ func (ib *IB) ReqRealTimeBars(contract *Contract, barSize int, whatToShow string
 	return rtBarChan, cancel
 }
 
-// ReqFundamentalData requests fundamental data for stocks.
-// The appropriate market data subscription must be set up in Account Management before you can receive this data.
-// Result will be delivered via wrapper.FundamentalData().
-// this func can handle conid specified in the Contract object,
-// but not tradingClass or multiplier. This is because this func
-// is used only for stocks and stocks do not have a multiplier and trading class.
-// reqId is	the ID of the data request. Ensures that responses are matched to requests if several requests are in process.
-// contract contains a description of the contract for which fundamental data is being requested.
-// reportType is one of the following XML reports:
-//
-//	ReportSnapshot (company overview)
-//	ReportsFinSummary (financial summary)
-//	ReportRatios (financial ratios)
-//	ReportsFinStatements (financial statements)
-//	RESC (analyst estimates)
-//	CalendarReport (company calendar)
-func (ib *IB) ReqFundamentalData(contract *Contract, reportType string, fundamentalDataOptions ...TagValue) (data string, err error) {
-	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
-	defer cancel()
-
-	reqID := ib.NextID()
-
-	ch, unsubscribe := ib.pubSub.Subscribe(reqID)
-	defer unsubscribe()
-
-	ib.eClient.ReqFundamentalData(reqID, contract, reportType, fundamentalDataOptions)
-
-	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
-	case msg := <-ch:
-		if isErrorMsg(msg) {
-			return "", msg2Error(msg)
-		}
-		return msg, nil
-	}
-}
-
 // ReqNewsProviders requests a slice of news providers.
 func (ib *IB) ReqNewsProviders() ([]NewsProvider, error) {
 	ctx, cancel := context.WithTimeout(ib.eClient.Ctx(), ib.config.Timeout)
