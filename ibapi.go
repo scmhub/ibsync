@@ -146,7 +146,7 @@ var (
 	RelativeMarketCombo             = ibapi.RelativeMarketCombo
 	OneCancelsAll                   = ibapi.OneCancelsAll
 	Volatility                      = ibapi.Volatility
-	MarketFHedge                    = ibapi.MarketFHedge
+	MarketFxHedge                    = ibapi.MarketFxHedge
 	PeggedToBenchmark               = ibapi.PeggedToBenchmark
 	AttachAdjustableToStop          = ibapi.AttachAdjustableToStop
 	AttachAdjustableToStopLimit     = ibapi.AttachAdjustableToStopLimit
