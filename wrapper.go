@@ -104,7 +104,7 @@ func (w *WrapperSync) TickEFP(reqID int64, tickType TickType, basisPoints float6
 
 func (w *WrapperSync) OrderStatus(orderID int64, status string, filled Decimal, remaining Decimal, avgFillPrice float64, permID int64, parentID int64, lastFillPrice float64, clientID int64, whyHeld string, mktCapPrice float64) {
 	log.Debug().Int64("orderID", orderID).Str("status", status).Stringer("filled", filled).Stringer("remaining", remaining).Float64("avgFillPrice", avgFillPrice).Int64("permID", permID).Int64("parentID", parentID).Float64("lastFillPrice", lastFillPrice).Int64("clientID", clientID).Str("whyHeld", whyHeld).Float64("mktCapPrice", mktCapPrice).Msg("<OrderStatus>")
-	orderStatus := OrderStatus{OrderID: orderID, Status: Status(status), Filled: filled, Remaining: remaining, AvgFillPrice: avgFillPrice, PermID: permID, ParentID: parentID, LastFillPrice: lastFillPrice, ClientID: clientID, WhyHeld: whyHeld, MktCapPrice: mktCapPrice}
+	orderStatus := OrderStatusData{OrderID: orderID, Status: OrderStatusFromString(status), Filled: filled, Remaining: remaining, AvgFillPrice: avgFillPrice, PermID: permID, ParentID: parentID, LastFillPrice: lastFillPrice, ClientID: clientID, WhyHeld: whyHeld, MktCapPrice: mktCapPrice}
 	key := orderKey(clientID, orderID, permID)
 
 	w.state.mu.Lock()
@@ -118,11 +118,11 @@ func (w *WrapperSync) OrderStatus(orderID int64, status string, filled Decimal, 
 
 	trade.mu.Lock()
 	trade.OrderStatus = orderStatus
-	logEntry := TradeLogEntry{Time: time.Now().UTC(), Status: Status(status), Message: "OrderStatus"}
+	logEntry := TradeLogEntry{Time: time.Now().UTC(), Status: OrderStatusFromString(status), Message: "OrderStatus"}
 	trade.addLog(logEntry)
 	trade.markAck()
 
-	if Status(status).IsDone() {
+	if OrderStatusFromString(status).IsTerminal() {
 		trade.markDone()
 	}
 
@@ -132,7 +132,7 @@ func (w *WrapperSync) OrderStatus(orderID int64, status string, filled Decimal, 
 func (w *WrapperSync) OpenOrder(orderID int64, contract *Contract, order *Order, orderState *OrderState) {
 	log.Debug().Int64("orderID", orderID).Stringer("contract", contract).Stringer("order", order).Stringer("orderState", orderState).Msg("<OpenOrder>")
 	key := orderKey(order.ClientID, order.OrderID, order.PermID)
-	status := Status(orderState.Status)
+	status := OrderStatusFromString(orderState.Status)
 
 	w.state.mu.Lock()
 	defer w.state.mu.Unlock()
@@ -153,7 +153,7 @@ func (w *WrapperSync) OpenOrder(orderID int64, contract *Contract, order *Order,
 		trade.mu.Unlock()
 	} else {
 		// Create a new trade if not found
-		orderStatus := OrderStatus{
+		orderStatus := OrderStatusData{
 			OrderID: orderID,
 			Status:  status,
 		}
@@ -162,7 +162,7 @@ func (w *WrapperSync) OpenOrder(orderID int64, contract *Contract, order *Order,
 		w.state.trades[key] = trade
 		w.state.permID2Trade[trade.Order.PermID] = trade
 	}
-	if status.IsDone() {
+	if status.IsTerminal() {
 		trade.markDoneSafe()
 	}
 	// make sure that the client issues order ids larger than any
@@ -262,7 +262,7 @@ func (w *WrapperSync) ExecDetails(reqID int64, contract *Contract, execution *Ex
 		key := orderKey(execution.ClientID, execution.OrderID, execution.PermID)
 		trade, ok = w.state.trades[key]
 		if !ok {
-			trade = NewTrade(contract, nil, OrderStatus{OrderID: execution.OrderID})
+			trade = NewTrade(contract, nil, OrderStatusData{OrderID: execution.OrderID})
 			w.state.trades[strconv.FormatInt(execution.PermID, 10)] = trade
 			w.state.permID2Trade[execution.PermID] = trade
 		}
@@ -786,9 +786,9 @@ func (w *WrapperSync) CompletedOrder(contract *Contract, order *Order, orderStat
 	logger := log.Debug().Str("account", order.Account).Str("PermID", LongMaxString(order.PermID)).Str("symbol", contract.Symbol).Str("action", order.Action).Str("orderType", order.OrderType).Str("totalQuantity", DecimalMaxString(order.TotalQuantity)).Str("filledQuantity", DecimalMaxString(order.FilledQuantity))
 	logger.Str("lmtPrice", FloatMaxString(order.LmtPrice)).Str("auxPrice", FloatMaxString(order.AuxPrice)).Str("Status", orderState.Status).Str("completedTime", orderState.CompletedTime).Str("CompletedStatus", orderState.CompletedStatus).Msg("<CompletedOrder>")
 
-	orderStatus := OrderStatus{
+	orderStatus := OrderStatusData{
 		OrderID: order.OrderID,
-		Status:  Status(orderState.Status),
+		Status:  OrderStatusFromString(orderState.Status),
 	}
 	trade := NewTrade(contract, order, orderStatus)
 	trade.markDone()

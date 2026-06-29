@@ -7,65 +7,29 @@ import (
 	"time"
 )
 
-// Status represents the current state of an order in the trading system.
-type Status string
-
-// Order status constants define all possible states an order can be in.
-const (
-	PendingSubmit Status = "PendingSubmit" // indicates that you have transmitted the order, but have not yet received confirmation that it has been accepted by the order destination.
-	PendingCancel Status = "PendingCancel" // PendingCancel	indicates that you have sent a request to cancel the order but have not yet received cancel confirmation from the order destination. At this point, your order is not confirmed canceled. It is not guaranteed that the cancellation will be successful.
-	PreSubmitted  Status = "PreSubmitted"  // indicates that a simulated order type has been accepted by the IB system and that this order has yet to be elected. The order is held in the IB system until the election criteria are met. At that time the order is transmitted to the order destination as specified.
-	Submitted     Status = "Submitted"     // indicates that your order has been accepted by the system.
-	ApiPending    Status = "ApiPending"    // Order is pending processing by the API
-	ApiCancelled  Status = "ApiCancelled"  // after an order has been submitted and before it has been acknowledged, an API client client can request its cancelation, producing this state.
-	Cancelled     Status = "Cancelled"     // indicates that the balance of your order has been confirmed canceled by the IB system. This could occur unexpectedly when IB or the destination has rejected your order.
-	Filled        Status = "Filled"        // indicates that the order has been completely filled. Market orders executions will not always trigger a Filled status.
-	Inactive      Status = "Inactive"      // indicates that the order was received by the system but is no longer active because it was rejected or canceled.
-)
-
-// IsActive returns true if the status indicates the order is still active in the market.
-func (s Status) IsActive() bool {
-	switch s {
-	case PendingSubmit, ApiPending, PreSubmitted, Submitted, PendingCancel:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsDone returns true if the status indicates the order has reached a terminal state.
-func (s Status) IsDone() bool {
-	switch s {
-	case Filled, Cancelled, ApiCancelled:
-		return true
-	default:
-		return false
-	}
-}
-
-// OrderStatus represents the current state and details of an order.
-type OrderStatus struct {
-	OrderID       int64   // Unique identifier for the order
-	Status        Status  // Current status of the order
-	Filled        Decimal // Amount of order that has been filled
-	Remaining     Decimal // Amount of order remaining to be filled
-	AvgFillPrice  float64 // Average price of filled portions
-	PermID        int64   // Permanent ID assigned by IB
-	ParentID      int64   // ID of parent order if this is a child order
-	LastFillPrice float64 // Price of the last fill
-	ClientID      int64   // Client identifier
-	WhyHeld       string  // Reason why order is being held
-	MktCapPrice   float64 // Market cap price
+// OrderStatusData represents the current state and details of an order.
+type OrderStatusData struct {
+	OrderID       int64       // Unique identifier for the order
+	Status        OrderStatus // Current status of the order
+	Filled        Decimal     // Amount of order that has been filled
+	Remaining     Decimal     // Amount of order remaining to be filled
+	AvgFillPrice  float64     // Average price of filled portions
+	PermID        int64       // Permanent ID assigned by IB
+	ParentID      int64       // ID of parent order if this is a child order
+	LastFillPrice float64     // Price of the last fill
+	ClientID      int64       // Client identifier
+	WhyHeld       string      // Reason why order is being held
+	MktCapPrice   float64     // Market cap price
 }
 
 // IsActive returns true if the order status indicates an active order.
-func (os OrderStatus) IsActive() bool {
+func (os OrderStatusData) IsActive() bool {
 	return os.Status.IsActive()
 }
 
 // IsDone returns true if the order status indicates the order has reached a terminal state.
-func (os OrderStatus) IsDone() bool {
-	return os.Status.IsDone()
+func (os OrderStatusData) IsDone() bool {
+	return os.Status.IsTerminal()
 }
 
 // Fill represents a single execution fill of an order, including contract details,
@@ -121,10 +85,10 @@ func (f *Fill) String() string {
 // TradeLogEntry represents a single entry in the trade's log, recording status changes
 // and other significant events.
 type TradeLogEntry struct {
-	Time      time.Time // Timestamp of the log entry
-	Status    Status    // Status at the time of the log entry
-	Message   string    // Descriptive message about the event
-	ErrorCode int64     // Error code if applicable
+	Time      time.Time   // Timestamp of the log entry
+	Status    OrderStatus // Status at the time of the log entry
+	Message   string      // Descriptive message about the event
+	ErrorCode int64       // Error code if applicable
 }
 
 // Trade represents a complete trading operation, including the contract, order details,
@@ -132,7 +96,7 @@ type TradeLogEntry struct {
 type Trade struct {
 	Contract    *Contract
 	Order       *Order
-	OrderStatus OrderStatus
+	OrderStatus OrderStatusData
 	mu          sync.RWMutex
 	fills       []*Fill
 	logs        []TradeLogEntry
@@ -146,14 +110,14 @@ type Trade struct {
 
 // NewTrade creates a new Trade instance with the specified contract and order details.
 // Optional initial order status can be provided.
-func NewTrade(contract *Contract, order *Order, orderStatus ...OrderStatus) *Trade {
-	var os OrderStatus
+func NewTrade(contract *Contract, order *Order, orderStatus ...OrderStatusData) *Trade {
+	var os OrderStatusData
 	if len(orderStatus) > 0 {
 		os = orderStatus[0]
 	} else {
-		os = OrderStatus{
+		os = OrderStatusData{
 			OrderID: order.OrderID,
-			Status:  PendingSubmit,
+			Status:  OrderStatusPendingSubmit,
 		}
 	}
 	return &Trade{
@@ -161,7 +125,7 @@ func NewTrade(contract *Contract, order *Order, orderStatus ...OrderStatus) *Tra
 		Order:       order,
 		OrderStatus: os,
 		fills:       make([]*Fill, 0),
-		logs:        []TradeLogEntry{{Time: time.Now().UTC(), Status: PendingSubmit}},
+		logs:        []TradeLogEntry{{Time: time.Now().UTC(), Status: OrderStatusPendingSubmit}},
 		done:        make(chan struct{}),
 		ack:         make(chan struct{}),
 	}

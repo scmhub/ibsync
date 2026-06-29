@@ -523,7 +523,7 @@ func TestCancelOrder(t *testing.T) {
 		t.Fatal("Order cancel timed out")
 	}
 
-	if trade.OrderStatus.Status != Cancelled {
+	if trade.OrderStatus.Status != OrderStatusCancelled {
 		t.Errorf("Expected Cancelled status, got %v", trade.OrderStatus.Status)
 	}
 
@@ -566,10 +566,10 @@ func TestGlobalCancel(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("Order cancel timed out")
 	}
-	if !(trade1.OrderStatus.Status == Cancelled || trade1.OrderStatus.Status == ApiCancelled) {
+	if !(trade1.OrderStatus.Status == OrderStatusCancelled || trade1.OrderStatus.Status == OrderStatusApiCancelled) {
 		t.Errorf("Expected Cancelled status for trade1, got %v", trade1.OrderStatus.Status)
 	}
-	if !(trade2.OrderStatus.Status == Cancelled || trade2.OrderStatus.Status == ApiCancelled) {
+	if !(trade2.OrderStatus.Status == OrderStatusCancelled || trade2.OrderStatus.Status == OrderStatusApiCancelled) {
 		t.Errorf("Expected Cancelled status for trade2, got %v", trade2.OrderStatus.Status)
 	}
 	if testing.Verbose() {

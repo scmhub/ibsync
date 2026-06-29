@@ -6,53 +6,53 @@ import (
 	"time"
 )
 
-func TestStatus_IsActive(t *testing.T) {
+func TestOrderStatus_IsActive(t *testing.T) {
 	tests := []struct {
 		name   string
-		status Status
+		status OrderStatus
 		want   bool
 	}{
-		{"PendingSubmit is active", PendingSubmit, true},
-		{"ApiPending is active", ApiPending, true},
-		{"PreSubmitted is active", PreSubmitted, true},
-		{"Submitted is active", Submitted, true},
-		{"Cancelled is not active", Cancelled, false},
-		{"Filled is not active", Filled, false},
-		{"ApiCancelled is not active", ApiCancelled, false},
-		{"Inactive is not active", Inactive, false},
-		{"Empty status is not active", Status(""), false},
+		{"PendingSubmit is active", OrderStatusPendingSubmit, true},
+		{"ApiPending is not active", OrderStatusApiPending, false},
+		{"PreSubmitted is active", OrderStatusPreSubmitted, true},
+		{"Submitted is active", OrderStatusSubmitted, true},
+		{"Cancelled is not active", OrderStatusCancelled, false},
+		{"Filled is not active", OrderStatusFilled, false},
+		{"ApiCancelled is not active", OrderStatusApiCancelled, false},
+		{"Inactive is not active", OrderStatusInactive, false},
+		{"Unknown is not active", OrderStatusUnknown, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.status.IsActive(); got != tt.want {
-				t.Errorf("Status.IsActive() = %v, want %v", got, tt.want)
+				t.Errorf("OrderStatus.IsActive() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestStatus_IsDone(t *testing.T) {
+func TestOrderStatus_IsTerminal(t *testing.T) {
 	tests := []struct {
 		name   string
-		status Status
+		status OrderStatus
 		want   bool
 	}{
-		{"Filled is done", Filled, true},
-		{"Cancelled is done", Cancelled, true},
-		{"ApiCancelled is done", ApiCancelled, true},
-		{"PendingSubmit is not done", PendingSubmit, false},
-		{"Submitted is not done", Submitted, false},
-		{"PreSubmitted is not done", PreSubmitted, false},
-		{"ApiPending is not done", ApiPending, false},
-		{"Inactive is not done", Inactive, false},
-		{"Empty status is not done", Status(""), false},
+		{"Filled is terminal", OrderStatusFilled, true},
+		{"Cancelled is terminal", OrderStatusCancelled, true},
+		{"ApiCancelled is terminal", OrderStatusApiCancelled, true},
+		{"Inactive is terminal", OrderStatusInactive, true},
+		{"PendingSubmit is not terminal", OrderStatusPendingSubmit, false},
+		{"Submitted is not terminal", OrderStatusSubmitted, false},
+		{"PreSubmitted is not terminal", OrderStatusPreSubmitted, false},
+		{"ApiPending is not terminal", OrderStatusApiPending, false},
+		{"Unknown is not terminal", OrderStatusUnknown, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.status.IsDone(); got != tt.want {
-				t.Errorf("Status.IsDone() = %v, want %v", got, tt.want)
+			if got := tt.status.IsTerminal(); got != tt.want {
+				t.Errorf("OrderStatus.IsTerminal() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -227,16 +227,16 @@ func TestFill_Matches(t *testing.T) {
 func TestNewTrade(t *testing.T) {
 	contract := &Contract{Symbol: "AAPL"}
 	order := &Order{OrderID: 123}
-	customStatus := OrderStatus{
+	customStatus := OrderStatusData{
 		OrderID: 123,
-		Status:  Submitted,
+		Status:  OrderStatusSubmitted,
 	}
 
 	tests := []struct {
 		name     string
 		contract *Contract
 		order    *Order
-		status   []OrderStatus
+		status   []OrderStatusData
 		wantErr  bool
 	}{
 		{
@@ -250,7 +250,7 @@ func TestNewTrade(t *testing.T) {
 			name:     "with custom status",
 			contract: contract,
 			order:    order,
-			status:   []OrderStatus{customStatus},
+			status:   []OrderStatusData{customStatus},
 			wantErr:  false,
 		},
 	}
@@ -302,14 +302,14 @@ func TestTrade_Logs(t *testing.T) {
 	if len(logs) != 1 {
 		t.Errorf("New trade should have 1 initial log entry, got %d", len(logs))
 	}
-	if logs[0].Status != PendingSubmit {
-		t.Errorf("Initial log status = %v, want %v", logs[0].Status, PendingSubmit)
+	if logs[0].Status != OrderStatusPendingSubmit {
+		t.Errorf("Initial log status = %v, want %v", logs[0].Status, OrderStatusPendingSubmit)
 	}
 
 	// Add new log entry
 	newEntry := TradeLogEntry{
 		Time:    time.Now(),
-		Status:  Submitted,
+		Status:  OrderStatusSubmitted,
 		Message: "Test message",
 	}
 	trade.addLog(newEntry)
@@ -327,17 +327,17 @@ func TestTrade_Logs(t *testing.T) {
 func TestTrade_IsActive(t *testing.T) {
 	tests := []struct {
 		name   string
-		status Status
+		status OrderStatus
 		want   bool
 	}{
-		{"active status", PendingSubmit, true},
-		{"inactive status", Cancelled, false},
-		{"done status", Filled, false},
+		{"active status", OrderStatusPendingSubmit, true},
+		{"inactive status", OrderStatusCancelled, false},
+		{"done status", OrderStatusFilled, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			trade := NewTrade(&Contract{}, &Order{}, OrderStatus{Status: tt.status})
+			trade := NewTrade(&Contract{}, &Order{}, OrderStatusData{Status: tt.status})
 			if got := trade.IsActive(); got != tt.want {
 				t.Errorf("Trade.IsActive() = %v, want %v", got, tt.want)
 			}
@@ -348,17 +348,17 @@ func TestTrade_IsActive(t *testing.T) {
 func TestTrade_IsDone(t *testing.T) {
 	tests := []struct {
 		name   string
-		status Status
+		status OrderStatus
 		want   bool
 	}{
-		{"done status", Filled, true},
-		{"active status", PendingSubmit, false},
-		{"inactive status", Inactive, false},
+		{"done status", OrderStatusFilled, true},
+		{"active status", OrderStatusPendingSubmit, false},
+		{"inactive status", OrderStatusInactive, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			trade := NewTrade(&Contract{}, &Order{}, OrderStatus{Status: tt.status})
+			trade := NewTrade(&Contract{}, &Order{}, OrderStatusData{Status: tt.status})
 			if got := trade.IsDone(); got != tt.want {
 				t.Errorf("Trade.IsDone() = %v, want %v", got, tt.want)
 			}

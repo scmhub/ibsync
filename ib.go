@@ -1001,7 +1001,7 @@ func (ib *IB) PlaceOrder(contract *Contract, order *Order) *Trade {
 				if err.Code == 200 || err.Code == 201 {
 					logEntry := TradeLogEntry{
 						Time:      time.Now().UTC(),
-						Status:    Inactive,
+						Status:    OrderStatusInactive,
 						Message:   err.Msg,
 						ErrorCode: err.Code,
 					}
@@ -1058,13 +1058,13 @@ func (ib *IB) CancelOrder(order *Order, orderCancel OrderCancel) *Trade {
 
 	logEntry := TradeLogEntry{
 		Time:    time.Now().UTC(),
-		Status:  PendingCancel,
+		Status:  OrderStatusPendingCancel,
 		Message: "CancelOrder",
 	}
 
 	trade.mu.Lock()
 	trade.addLog(logEntry)
-	trade.OrderStatus.Status = PendingCancel
+	trade.OrderStatus.Status = OrderStatusPendingCancel
 	trade.mu.Unlock()
 
 	return trade
@@ -1090,13 +1090,13 @@ func (ib *IB) ReqGlobalCancel() {
 	for _, trade := range ib.OpenTrades() {
 		logEntry := TradeLogEntry{
 			Time:    time.Now().UTC(),
-			Status:  PendingCancel,
+			Status:  OrderStatusPendingCancel,
 			Message: "GlobalCancel",
 		}
 
 		trade.mu.Lock()
 		trade.addLog(logEntry)
-		trade.OrderStatus.Status = PendingCancel
+		trade.OrderStatus.Status = OrderStatusPendingCancel
 		trade.mu.Unlock()
 	}
 

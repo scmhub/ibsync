@@ -58,6 +58,7 @@ type (
 	OrderCancel                     = ibapi.OrderCancel
 	//int64                         = ibapi.int64
 	OrderState          = ibapi.OrderState
+	OrderStatus         = ibapi.OrderStatus
 	PriceIncrement      = ibapi.PriceIncrement
 	ScanData            = ibapi.ScanData
 	ScannerSubscription = ibapi.ScannerSubscription
@@ -94,6 +95,7 @@ var (
 	NewOrder                   = ibapi.NewOrder
 	NewOrderCancel             = ibapi.NewOrderCancel
 	NewOrderState              = ibapi.NewOrderState
+	OrderStatusFromString      = ibapi.OrderStatusFromString
 	NewPriceIncrement          = ibapi.NewPriceIncrement
 	NewScannerSubscription     = ibapi.NewScannerSubscription
 	NewSmartComponent          = ibapi.NewSmartComponent
@@ -169,6 +171,20 @@ var (
 	CancelOrderWithManualTime       = ibapi.CancelOrderWithManualTime
 	LimitOrderWithCmeTaggingFields  = ibapi.LimitOrderWithCmeTaggingFields
 	OrderCancelWithCmeTaggingFields = ibapi.OrderCancelWithCmeTaggingFields
+)
+
+const (
+	// OrderStatus
+	OrderStatusApiPending    = ibapi.OrderStatusApiPending
+	OrderStatusApiCancelled  = ibapi.OrderStatusApiCancelled
+	OrderStatusPreSubmitted  = ibapi.OrderStatusPreSubmitted
+	OrderStatusPendingCancel = ibapi.OrderStatusPendingCancel
+	OrderStatusCancelled     = ibapi.OrderStatusCancelled
+	OrderStatusSubmitted     = ibapi.OrderStatusSubmitted
+	OrderStatusFilled        = ibapi.OrderStatusFilled
+	OrderStatusInactive      = ibapi.OrderStatusInactive
+	OrderStatusPendingSubmit = ibapi.OrderStatusPendingSubmit
+	OrderStatusUnknown       = ibapi.OrderStatusUnknown
 )
 
 const (
