@@ -60,7 +60,6 @@ type (
 	OrderState          = ibapi.OrderState
 	OrderStatus         = ibapi.OrderStatus
 	PriceIncrement      = ibapi.PriceIncrement
-	ScanData            = ibapi.ScanData
 	ScannerSubscription = ibapi.ScannerSubscription
 	SmartComponent      = ibapi.SmartComponent
 	SoftDollarTier      = ibapi.SoftDollarTier
@@ -148,7 +147,7 @@ var (
 	RelativeMarketCombo             = ibapi.RelativeMarketCombo
 	OneCancelsAll                   = ibapi.OneCancelsAll
 	Volatility                      = ibapi.Volatility
-	MarketFxHedge                    = ibapi.MarketFxHedge
+	MarketFxHedge                   = ibapi.MarketFxHedge
 	PeggedToBenchmark               = ibapi.PeggedToBenchmark
 	AttachAdjustableToStop          = ibapi.AttachAdjustableToStop
 	AttachAdjustableToStopLimit     = ibapi.AttachAdjustableToStopLimit
