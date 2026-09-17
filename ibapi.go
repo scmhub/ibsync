@@ -294,5 +294,11 @@ const (
 	FINAL_IPO_LAST            = ibapi.FINAL_IPO_LAST
 	DELAYED_YIELD_BID         = ibapi.DELAYED_YIELD_BID
 	DELAYED_YIELD_ASK         = ibapi.DELAYED_YIELD_ASK
+	ODD_LOT_BID               = ibapi.ODD_LOT_BID
+	ODD_LOT_ASK               = ibapi.ODD_LOT_ASK
+	ODD_LOT_BID_SIZE          = ibapi.ODD_LOT_BID_SIZE
+	ODD_LOT_ASK_SIZE          = ibapi.ODD_LOT_ASK_SIZE
+	ODD_LOT_BID_EXCH          = ibapi.ODD_LOT_BID_EXCH
+	ODD_LOT_ASK_EXCH          = ibapi.ODD_LOT_ASK_EXCH
 	NOT_SET                   = ibapi.NOT_SET
 )

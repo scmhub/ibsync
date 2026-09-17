@@ -102,6 +102,12 @@ type Ticker struct {
 	regulatoryImbalance Decimal
 	bboExchange         string
 	snapshotPermissions int64
+	oddLotBid           float64
+	oddLotBidSize       Decimal
+	oddLotBidExchange   string
+	oddLotAsk           float64
+	oddLotAskSize       Decimal
+	oddLotAskExchange   string
 }
 
 // NewTicker creates a new Ticker instance for the given contract.
@@ -178,6 +184,42 @@ func (t *Ticker) AskExchange() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.askExchange
+}
+
+func (t *Ticker) OddLotBid() float64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotBid
+}
+
+func (t *Ticker) OddLotBidSize() Decimal {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotBidSize
+}
+
+func (t *Ticker) OddLotBidExchange() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotBidExchange
+}
+
+func (t *Ticker) OddLotAsk() float64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotAsk
+}
+
+func (t *Ticker) OddLotAskSize() Decimal {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotAskSize
+}
+
+func (t *Ticker) OddLotAskExchange() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.oddLotAskExchange
 }
 
 func (t *Ticker) Last() float64 {
@@ -697,6 +739,10 @@ func (t *Ticker) SetTickPrice(tp TickPrice) {
 		t.askYield = tp.Price
 	case LAST_YIELD:
 		t.lastYield = tp.Price
+	case ODD_LOT_BID:
+		t.oddLotBid = tp.Price
+	case ODD_LOT_ASK:
+		t.oddLotAsk = tp.Price
 	default:
 		log.Warn().Err(errUnknownTickType).Int64("TickType", tp.TickType).Msg("SetTickPrice")
 	}
@@ -761,6 +807,10 @@ func (t *Ticker) SetTickSize(ts TickSize) {
 		t.avOptionVolume = ts.Size
 	case SHORTABLE_SHARES:
 		t.shortableShares = ts.Size
+	case ODD_LOT_BID_SIZE:
+		t.oddLotBidSize = ts.Size
+	case ODD_LOT_ASK_SIZE:
+		t.oddLotAskSize = ts.Size
 	default:
 		log.Warn().Err(errUnknownTickType).Int64("TickType", ts.TickType).Msg("SetTickSize")
 	}
@@ -830,6 +880,10 @@ func (t *Ticker) SetTickString(ts TickString) {
 		t.bidExchange = ts.Value
 	case ASK_EXCH:
 		t.askExchange = ts.Value
+	case ODD_LOT_BID_EXCH:
+		t.oddLotBidExchange = ts.Value
+	case ODD_LOT_ASK_EXCH:
+		t.oddLotAskExchange = ts.Value
 	case LAST_EXCH:
 		t.lastExchange = ts.Value
 	case LAST_TIMESTAMP, DELAYED_LAST_TIMESTAMP:
