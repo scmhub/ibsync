@@ -214,7 +214,7 @@ func TestMultipleConnections(t *testing.T) {
 	if err := ib1.Connect(); err != nil {
 		panic("Failed to connect to IB: " + err.Error())
 	}
-	defer ib1.Disconnect()
+	defer func() { _ = ib1.Disconnect() }()
 
 	// Client #2
 	ib2 := NewIB(NewConfig(
@@ -225,7 +225,7 @@ func TestMultipleConnections(t *testing.T) {
 	if err := ib2.Connect(); err != nil {
 		panic("Failed to connect to IB: " + err.Error())
 	}
-	defer ib2.Disconnect()
+	defer func() { _ = ib2.Disconnect() }()
 
 	// Client #3
 	ib3 := NewIB(NewConfig(
@@ -236,7 +236,7 @@ func TestMultipleConnections(t *testing.T) {
 	if err := ib3.Connect(); err != nil {
 		panic("Failed to connect to IB: " + err.Error())
 	}
-	defer ib3.Disconnect()
+	defer func() { _ = ib3.Disconnect() }()
 
 	// Client #4
 	ib4 := NewIB(NewConfig(
@@ -247,7 +247,7 @@ func TestMultipleConnections(t *testing.T) {
 	if err := ib4.Connect(); err != nil {
 		panic("Failed to connect to IB: " + err.Error())
 	}
-	defer ib4.Disconnect()
+	defer func() { _ = ib4.Disconnect() }()
 
 	if !ib1.IsConnected() {
 		t.Fatal("client 1 not connected")
@@ -566,10 +566,10 @@ func TestGlobalCancel(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("Order cancel timed out")
 	}
-	if !(trade1.OrderStatus.Status == OrderStatusCancelled || trade1.OrderStatus.Status == OrderStatusApiCancelled) {
+	if trade1.OrderStatus.Status != OrderStatusCancelled && trade1.OrderStatus.Status != OrderStatusApiCancelled {
 		t.Errorf("Expected Cancelled status for trade1, got %v", trade1.OrderStatus.Status)
 	}
-	if !(trade2.OrderStatus.Status == OrderStatusCancelled || trade2.OrderStatus.Status == OrderStatusApiCancelled) {
+	if trade2.OrderStatus.Status != OrderStatusCancelled && trade2.OrderStatus.Status != OrderStatusApiCancelled {
 		t.Errorf("Expected Cancelled status for trade2, got %v", trade2.OrderStatus.Status)
 	}
 	if testing.Verbose() {
@@ -793,7 +793,9 @@ func TestReqMktDepth(t *testing.T) {
 		}
 	}
 
-	ib.CancelMktDepth(aapl, false)
+	if err := ib.CancelMktDepth(aapl, false); err != nil {
+		t.Errorf("CancelMktDepth: %v", err)
+	}
 }
 
 func TestNewsBulletins(t *testing.T) {
@@ -979,7 +981,7 @@ func TestReqHeadTimeStamp(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 		return
 	}
-	if !(headStamp.Before(time.Now()) && headStamp.After(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))) {
+	if headStamp.After(time.Now()) || headStamp.Before(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	t.Logf("headStamp:, %v", headStamp)

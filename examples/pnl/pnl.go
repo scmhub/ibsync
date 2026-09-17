@@ -37,7 +37,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Retrieve the list of managed accounts.
 	managedAccounts := ib.ManagedAccounts()

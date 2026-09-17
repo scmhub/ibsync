@@ -113,7 +113,7 @@ func ParseIBTime(s string) (time.Time, error) {
 }
 
 // LastWednesday12EST returns time.Time correspondong to last wednesday 12:00 EST
-// Without checking holidays this a high probability time for open market. Usefull for testing historical data
+// Without checking holidays this a high probability time for open market. Useful for testing historical data
 func LastWednesday12EST() time.Time {
 	// last Wednesday
 	offset := (int(time.Now().Weekday()) - int(time.Wednesday) + 7) % 7
@@ -133,7 +133,7 @@ func UpdateStruct(dest, src any) error {
 	srcVal := reflect.Indirect(reflect.ValueOf(src)) // Handles both struct and *struct for src
 
 	// Ensure that dest is a pointer to a struct
-	if destVal.Kind() != reflect.Ptr || destVal.Elem().Kind() != reflect.Struct {
+	if destVal.Kind() != reflect.Pointer || destVal.Elem().Kind() != reflect.Struct {
 		return errors.New("dest must be a pointer to a struct")
 	}
 	// Ensure src is a struct (after dereferencing if it's a pointer)
@@ -169,12 +169,12 @@ func Stringify(obj interface{}) string {
 // isEmptyValue checks if a value is considered "empty"
 func isEmptyValue(v reflect.Value) bool {
 	// Handle nil pointers
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		return v.IsNil()
 	}
 
 	// Dereference pointer if needed
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -208,7 +208,7 @@ func isEmptyValue(v reflect.Value) bool {
 	case reflect.Float32, reflect.Float64:
 		return v.Float() == 0 || v.Float() == UNSET_FLOAT
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return v.IsNil()
 
 	case reflect.Interface:
@@ -221,7 +221,7 @@ func isEmptyValue(v reflect.Value) bool {
 // stringifyValue handles the recursive stringification of values
 func stringifyValue(v reflect.Value) string {
 	// Handle pointer types by dereferencing
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		// If nil, return empty string
 		if v.IsNil() {
 			return ""

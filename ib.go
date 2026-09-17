@@ -144,7 +144,9 @@ func (ib *IB) ConnectWithGracefulShutdown(config ...*Config) error {
 	go func() {
 		<-sigChan
 		log.Warn().Msg("detected termination signal, shutting down gracefully")
-		ib.Disconnect()
+		if err := ib.Disconnect(); err != nil {
+			log.Error().Err(err).Msg("Disconnect")
+		}
 		os.Exit(0)
 	}()
 	return nil
@@ -1463,7 +1465,9 @@ func (ib *IB) QualifyContract(contracts ...*Contract) error {
 				return
 			}
 
-			UpdateStruct(contract, cds[0].Contract)
+			if err := UpdateStruct(contract, cds[0].Contract); err != nil {
+				errChan <- err
+			}
 		}(contract)
 	}
 

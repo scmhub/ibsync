@@ -25,7 +25,7 @@ func save2File(xmlData string, filePath string) {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	_, err = file.WriteString(xmlData)
 	if err != nil {
@@ -93,7 +93,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Scanner Parameter
 	xml, err := ib.ReqScannerParameters()

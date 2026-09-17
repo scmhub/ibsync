@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/scmhub/ibsync"
 	"github.com/rs/zerolog"
+	"github.com/scmhub/ibsync"
 )
 
 // Connection constants for the Interactive Brokers API.
@@ -22,7 +22,7 @@ const (
 func main() {
 	// We set logger for pretty logs to console
 	log := ibsync.Logger()
-    ibsync.SetLogLevel(int(zerolog.DebugLevel))
+	ibsync.SetLogLevel(int(zerolog.DebugLevel))
 	ibsync.SetConsoleWriter()
 
 	// New IB client & Connect
@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Connect")
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Requests delayed "frozen" data for a user without market data subscriptions.
 	ib.ReqMarketDataType(4)

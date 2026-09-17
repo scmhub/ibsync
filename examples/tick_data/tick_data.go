@@ -40,7 +40,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	eurusd := ibsync.NewForex("EUR", "IDEALPRO", "USD")
 
@@ -67,7 +67,9 @@ func main() {
 	// Tick by tick data
 	tickByTick := ib.ReqTickByTickData(eurusd, "BidAsk", 100, true)
 	time.Sleep(5 * time.Second)
-	ib.CancelTickByTickData(eurusd, "BidAsk")
+	if err := ib.CancelTickByTickData(eurusd, "BidAsk"); err != nil {
+		log.Error().Err(err).Msg("CancelTickByTickData")
+	}
 
 	fmt.Println("Tick By Tick dat:", tickByTick)
 

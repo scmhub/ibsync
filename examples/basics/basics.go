@@ -63,7 +63,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Managed accounts
 	managedAccounts := ib.ManagedAccounts()
@@ -82,7 +82,7 @@ func main() {
 	fmt.Println("portfolio", portfolio)
 
 	// Positions
-	// Subscribe to Postion
+	// Subscribe to Position
 	ib.ReqPositions()
 	// Position Channel
 	posChan := ib.PositionChan()

@@ -38,7 +38,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	eurusd := ibsync.NewForex("EUR", "IDEALPRO", "USD")
 

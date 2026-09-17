@@ -84,7 +84,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Make sure that the account is a paper account.
 	if !ib.IsPaperAccount() {

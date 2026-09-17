@@ -41,7 +41,7 @@ func main() {
 		log.Error().Err(err).Msg("Connect")
 		return
 	}
-	defer ib.Disconnect()
+	defer func() { _ = ib.Disconnect() }()
 
 	// Market depth exchange list
 	mktDepthsExchanges, err := ib.ReqMktDepthExchanges()
@@ -54,7 +54,10 @@ func main() {
 	}
 
 	eurusd := ibsync.NewForex("EUR", "IDEALPRO", "USD")
-	ib.QualifyContract(eurusd)
+	if err := ib.QualifyContract(eurusd); err != nil {
+		log.Error().Err(err).Msg("QualifyContract")
+		return
+	}
 
 	// Request Market depth
 	ticker, err := ib.ReqMktDepth(eurusd, 10, false)
