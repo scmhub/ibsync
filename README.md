@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/scmhub/ibsync)](https://goreportcard.com/report/github.com/scmhub/ibsync)
+[![CI](https://github.com/scmhub/ibsync/actions/workflows/ci.yml/badge.svg)](https://github.com/scmhub/ibsync/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/scmhub/ibsync.svg)](https://pkg.go.dev/github.com/scmhub/ibsync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 

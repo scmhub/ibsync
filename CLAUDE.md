@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 go build ./...           # build
 go vet ./...             # static checks
 go test ./... -run '<Pattern>'   # run a specific unit test
+golangci-lint run ./...  # lint (config in .golangci.yml, also run in CI)
 ```
 
 Running `go test ./...` as a whole will attempt to run `ib_test.go`, which requires a **live connection to TWS/IB Gateway on a paper trading account** (`localhost:7497` by default, see `testConfig` in `ib_test.go`) with the market open. These tests will hang/fail without that live connection. Pure unit tests that don't need a connection live in `config_test.go`, `encoder_test.go`, `pubsub_test.go`, `utils_test.go`, and `trade_test.go` — prefer running these explicitly (`go test -run TestName`) unless a live TWS/paper session is confirmed available.
